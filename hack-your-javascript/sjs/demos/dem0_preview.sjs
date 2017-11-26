@@ -1,7 +1,7 @@
 
 
 // Select query demo
-var myList = [{FirstName:"Chris",LastName:"Pearson"},
+var myList = [{FirstName:"Kris",LastName:"Pearson"},
               {FirstName:"Kate",LastName:"Johnson"},
               {FirstName:"Josh",LastName:"Sutherland"},
               {FirstName:"John",LastName:"Ronald"},
