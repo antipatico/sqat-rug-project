@@ -4,7 +4,6 @@ import IO;
 import ParseTree;
 import String;
 import util::FileSystem;
-import sqat::series1::Comments;
 
 /* 
 
@@ -39,7 +38,21 @@ alias SLOC = map[loc file, int sloc];
 
 SLOC sloc(loc project) {
   SLOC result = ();
-  // implement here
+  fs = crawl(project);
+  //(0 | println(location) | /file(location) := fs );
+  for (/file(location) := fs) { /* For each file in the designed directory */
+  	println(location);
+  }
+  
   return result;
 }             
-             
+
+/*
+int countDirs(FileSystem fs) {
+	int count = 0;
+	visit(fs) {
+		case directory(_,_): count += 1;
+	}
+	return count;
+}
+*/
