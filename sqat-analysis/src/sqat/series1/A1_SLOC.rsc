@@ -1,9 +1,10 @@
 module sqat::series1::A1_SLOC
 
 import IO;
-import ParseTree;
 import String;
 import util::FileSystem;
+import util::Math;
+import List;
 
 /* 
 
@@ -61,7 +62,11 @@ list[str] removeMultiLineComments(list[str] lines) {
 	return linesWithoutComments;
 }
 
-/*
+test bool testRemoveMultiLineComments() {
+	return size(removeMultiLineComments(readFileLines(|project://sqat-analysis/tests/testFile.java|))) == 13;
+}
+
+
 list[str] removeLinesWithoutCode(list[str] lines) {
 	list[str] linesWithCodeOnly = [];
 	
@@ -73,19 +78,29 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 	}
 	
 	return linesWithCodeOnly;
-}*/
+}
+
+
+
+test bool testRemoveLinesWithoutCode() {
+	int s = size(removeLinesWithoutCode(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
+	println(s);
+	return s == 17;
+}
 
 int getFileSLOC(loc file) {
 	list[str] lines = [];
 	int sloc = 0;
-	lines = removeMultiLineComments(readFileLines(file));
-
+	lines = removeLinesWithoutCode(removeMultiLineComments(readFileLines(file)));
+	/*
 	for (line <- lines) {
 		if (/^(\s|\t)*\/\/.*$/ := line) continue;
 		if (/^(\s|\t)*$/ := line) continue;
 		sloc+=1;
 	}
-	return sloc;
+	return sloc;*/
+	
+	return size(lines);
 }
 
 SLOC sloc(loc project) {
@@ -99,45 +114,48 @@ SLOC sloc(loc project) {
   return result;
 }
 
-/*
-Answer the following questions:
-- what is the biggest file in JPacman?
-- what is the total size of JPacman?
-- is JPacman large according to SIG maintainability?
-++
-- what is the ratio between actual code and test code size?
-*/
-
 void main() {
 	loc rootFolder = |project://jpacman-framework/src/|;
 	loc mainFolder = rootFolder + "main/";
 	loc testFolder = rootFolder + "test/";
+	
 	SLOC mainSLOC = sloc(mainFolder);
 	SLOC testSLOC = sloc(testFolder);
 	SLOC totalSLOC = mainSLOC + testSLOC;
 	
-	tuple[loc file, int sloc] maxSLOC = <|file://none|,-1>;
-	int totalSize, mainSize, testSize;
-	totalSize = mainSize = testSize = 0;
+	int mainSize = calculateLineCountFromSLOC(mainSLOC);
+	int testSize = calculateLineCountFromSLOC(testSLOC);
+	int totalSize = mainSize + testSize;
 	
-	for(result <- totalSLOC) {
-		int currentSLOC = totalSLOC[result];
-		
-		if(maxSLOC.sloc < currentSLOC) {
-			maxSLOC.sloc = currentSLOC;
-			maxSLOC.file = result;	
-		}
-		
-		if(result in testSLOC) {
-			mainSize += currentSLOC;
-		} else {
-			testSize += currentSLOC;
-		}
-		//print(result); print(": "); println(currentSLOC);
+	real ratio = toReal(mainSize) / testSize;
+	tuple[loc file, int size] biggestFile = findBiggestFile(totalSLOC);
+	
+	println("Total main size: <mainSize>"); 
+	println("Total test size: <testSize>");
+	println("Total project size: <totalSize>");
+	println("Main to test ratio: <ratio>");
+	println("Biggest file: <biggestFile.file> Size: <biggestFile.size>");
+}
+
+int calculateLineCountFromSLOC(SLOC sloc) {
+	int totalLineCount = 0;
+
+	for (s <- sloc) {
+		totalLineCount += sloc[s];
 	}
-	totalSize = testSize + mainSize;
-	print("Biggest file: "); print(maxSLOC.file); print(": "); println(maxSLOC.sloc);
-	print("Total size: "); println(totalSize);
+
+	return totalLineCount;
+}
+
+tuple[loc, int] findBiggestFile(SLOC sloc) {
+	tuple[loc file, int sloc] result = <|file://none|,-1>;
+	
+	for (s <- sloc, sloc[s] > result.sloc) {
+		result.sloc = sloc[s];
+		result.file = s;
+	}
+	
+	return result;
 }
 
  //(0 | println(location) | /file(location) := fs );
