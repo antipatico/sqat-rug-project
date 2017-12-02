@@ -37,7 +37,7 @@ Bonus:
 alias SLOC = map[loc file, int sloc];
 
 
-list[str] removeComments(list[str] lines) {
+list[str] removeMultiLineComments(list[str] lines) {
 	list[str] linesWithoutComments = [];
 	
 	bool insideComment = false;
@@ -61,6 +61,7 @@ list[str] removeComments(list[str] lines) {
 	return linesWithoutComments;
 }
 
+/*
 list[str] removeLinesWithoutCode(list[str] lines) {
 	list[str] linesWithCodeOnly = [];
 	
@@ -72,15 +73,19 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 	}
 	
 	return linesWithCodeOnly;
-}
+}*/
 
 int getFileSLOC(loc file) {
-	list[str] lines;
-	lines = readFileLines(file);
-	
-	lines = removeLinesWithoutCode(removeComments(lines));
+	list[str] lines = [];
+	int sloc = 0;
+	lines = removeMultiLineComments(readFileLines(file));
 
-	return size(lines);
+	for (line <- lines) {
+		if (/^(\s|\t)*\/\/.*$/ := line) continue;
+		if (/^(\s|\t)*$/ := line) continue;
+		sloc+=1;
+	}
+	return sloc;
 }
 
 SLOC sloc(loc project) {
@@ -90,19 +95,52 @@ SLOC sloc(loc project) {
   	if(location.extension == "java")
   		result[location] = getFileSLOC(location);
   }
-    
+
   return result;
 }
 
+/*
+Answer the following questions:
+- what is the biggest file in JPacman?
+- what is the total size of JPacman?
+- is JPacman large according to SIG maintainability?
+++
+- what is the ratio between actual code and test code size?
+*/
 
 void main() {
-	results = sloc(|project://jpacman-framework/src/main/|);
-	for(result <- results) {
-		print(result); print(": "); println(results[result]);
+	loc rootFolder = |project://jpacman-framework/src/|;
+	loc mainFolder = rootFolder + "main/";
+	loc testFolder = rootFolder + "test/";
+	SLOC mainSLOC = sloc(mainFolder);
+	SLOC testSLOC = sloc(testFolder);
+	SLOC totalSLOC = mainSLOC + testSLOC;
+	
+	tuple[loc file, int sloc] maxSLOC = <|file://none|,-1>;
+	int totalSize, mainSize, testSize;
+	totalSize = mainSize = testSize = 0;
+	
+	for(result <- totalSLOC) {
+		int currentSLOC = totalSLOC[result];
+		
+		if(maxSLOC.sloc < currentSLOC) {
+			maxSLOC.sloc = currentSLOC;
+			maxSLOC.file = result;	
+		}
+		
+		if(result in testSLOC) {
+			mainSize += currentSLOC;
+		} else {
+			testSize += currentSLOC;
+		}
+		//print(result); print(": "); println(currentSLOC);
 	}
+	totalSize = testSize + mainSize;
+	print("Biggest file: "); print(maxSLOC.file); print(": "); println(maxSLOC.sloc);
+	print("Total size: "); println(totalSize);
 }
 
-  //(0 | println(location) | /file(location) := fs );
+ //(0 | println(location) | /file(location) := fs );
 
 
 /*
