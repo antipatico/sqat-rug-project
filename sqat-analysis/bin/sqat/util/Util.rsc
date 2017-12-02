@@ -1,1 +1,0 @@
-module sqat::util::Util
