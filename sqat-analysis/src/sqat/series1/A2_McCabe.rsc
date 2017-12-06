@@ -51,7 +51,25 @@ alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
   // to be done
+ 
 }
 
+int a () {
+	int count = 0;
+	
+	visit (jpacmanASTs()) {
+		case method(_,_,_,_,_): count += countIfStatements(it);
+	}
+	
+	return count;
+}
 
-
+int countIfStatements (Declaration method) {
+	int count = 0;
+	visit(method) {
+		case if(_,_): count += 1;
+		case if(_,_,_): count+=1;
+	}
+	
+	return count;
+}
