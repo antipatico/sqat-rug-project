@@ -54,22 +54,57 @@ CCDist ccDist(CC cc) {
  
 }
 
-int a () {
-	int count = 0;
-	
+
+
+void main () {
 	visit (jpacmanASTs()) {
-		case method(_,_,_,_,_): count += countIfStatements(it);
+		case method(_,name,_,_,body): {
+			int complexity = mcCabeComplexity(body);
+			println("<name> : <complexity>");
+		}
+		case constructor(name,_,_,body):{
+			int complexity = mcCabeComplexity(body);
+			println("<name> : <complexity>");
+		}
+	}
+}
+
+
+int mcCabeComplexity(Statement body) {
+	return countControlStatements(body)+1;
+}
+
+int countControlStatements (Statement body) {
+	int count = 0;
+
+	visit(body) {
+		case \for(_,_,_): count += 1;
+		case \for(_,_,_,_): count += 1;
+		case \foreach(_,_,foreachBody) : count +=1;
+		case \if(_,_): count += 1;
+		case \if(_,_,_): count += 1;
+		case \do(_,_): count += 1;
+		case \while(_,_): count += 1;
+		//case \case(_,_,_): count += 1;
+		
+		//case \switch(_,_): count += 1;
 	}
 	
 	return count;
 }
 
-int countIfStatements (Declaration method) {
+
+/*
+int b() {
 	int count = 0;
-	visit(method) {
-		case if(_,_): count += 1;
-		case if(_,_,_): count+=1;
+	visit(createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true)){
+		case method(_,name,_,_,body): {
+			count += countControlStatements(body);
+			println("<name> : <count>"); }
+		case constructor(name,_,_,body): {
+			count += countControlStatements(body);
+			println("<name> : <count>"); 
+		}
 	}
-	
 	return count;
-}
+}*/
