@@ -39,6 +39,11 @@ set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman
 
 alias CC = rel[loc method, int cc];
 
+// overload used in ex3
+CC cc(loc project) {
+	return cc(createAstsFromEclipseProject(project, true));
+}
+
 CC cc(set[Declaration] decls) {
   CC result = {};
   
