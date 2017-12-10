@@ -42,7 +42,14 @@ alias CC = rel[loc method, int cc];
 CC cc(set[Declaration] decls) {
   CC result = {};
   
-  // to be done
+  for(Declaration d <- decls) {
+  	// probably missing results since we couldn't find a way to access location
+  	// @src doesn't work
+  	visit(d) {
+  		case method(_,_,_,_,body): result[d.src] = mcCabeComplexity(body);
+  		case constructor(_,_,_,body): result[d.src] = mcCabeComplexity(body);
+  	}
+  }
   
   return result;
 }
@@ -50,25 +57,44 @@ CC cc(set[Declaration] decls) {
 alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
-  // to be done
- 
+  CCDist distribution = ();
+  
+  // init map with 0
+  for (c <- cc) {
+  	distribution[c.cc] = 0;
+  }
+  
+  for (c <- cc) {
+  	distribution[c.cc] += 1;
+  }
+  
+  return distribution;
 }
 
+tuple[loc, int] getMaxComplexityMethod(CC complexities) {
+	tuple[loc method, int cc]  result = <|file://n0n3|, -1>;
+	
+	for (c <- complexities, c.cc > result.cc) {
+		result = c;
+	}
+	
+	return result;
+}
 
+void main() {
+	CC complexities = cc(jpacmanASTs());
+	CCDist complexityFrequency = ccDist(complexities);
+	tuple[loc method, int cc] maxComplexity = getMaxComplexityMethod(complexities);
+	
+	println(complexityFrequency);
+	println(maxComplexity);
+}
 
-void main () {
-	visit (jpacmanASTs()) {
-		case method(_,name,_,_,body): {
-			int complexity = mcCabeComplexity(body);
-			println("<name> : <complexity>");
-		}
-		case constructor(name,_,_,body):{
-			int complexity = mcCabeComplexity(body);
-			println("<name> : <complexity>");
-		}
+void printLocationAndComplexity() {
+	for(cc <- cc(jpacmanASTs())) {
+		println("<cc>");
 	}
 }
-
 
 int mcCabeComplexity(Statement body) {
 	return countControlStatements(body)+1;
@@ -77,34 +103,36 @@ int mcCabeComplexity(Statement body) {
 int countControlStatements (Statement body) {
 	int count = 0;
 
+	// Information on what counts as control statement was found here: http://checkstyle.sourceforge.net/config_metrics.html#CyclomaticComplexity
 	visit(body) {
 		case \for(_,_,_): count += 1;
 		case \for(_,_,_,_): count += 1;
-		case \foreach(_,_,foreachBody) : count +=1;
+		case \foreach(_,_,_) : count +=1;
 		case \if(_,_): count += 1;
 		case \if(_,_,_): count += 1;
 		case \do(_,_): count += 1;
 		case \while(_,_): count += 1;
-		//case \case(_,_,_): count += 1;
-		
-		//case \switch(_,_): count += 1;
+		case \switch(_,_): count += 1;
+		case \case(_): count += 1;
+		case \defaultCase(): count += 1;
+		case \catch(_,_): count += 1;
 	}
 	
 	return count;
 }
 
-
-/*
-int b() {
-	int count = 0;
-	visit(createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true)){
-		case method(_,name,_,_,body): {
-			count += countControlStatements(body);
-			println("<name> : <count>"); }
-		case constructor(name,_,_,body): {
-			count += countControlStatements(body);
-			println("<name> : <count>"); 
-		}
+test bool testCountControlStatements() {
+	Declaration ast = createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true);
+	
+	controlStatementCount = 0;
+	
+	visit(ast) {
+		case method(_,_,_,_,body): controlStatementCount += countControlStatements(body);
+  		case constructor(_,_,_,body): controlStatementCount += countControlStatements(body);
 	}
-	return count;
-}*/
+	
+	println("There are <controlStatementCount> control statements. Expected 20.");
+	
+	return controlStatementCount == 20;
+	
+}

@@ -47,12 +47,12 @@ list[str] removeMultiLineComments(list[str] lines) {
 	for (line <- lines) {
 		
 		if (insideComment) {
-			if (/^.*\*\/.*$/ := line) {
+			if (/^.*\*\/.*$/ := line) {	// comment beginning '/*'
 				insideComment = false;
 			}
 		}
 		else {
-			if (/^.*\/\*.*$/ := line) {
+			if (/^.*\/\*.*$/ := line) {	// comment end '*/'
 				insideComment = true;
 			}
 			if (!insideComment) linesWithoutComments += line;
@@ -63,7 +63,9 @@ list[str] removeMultiLineComments(list[str] lines) {
 }
 
 test bool testRemoveMultiLineComments() {
-	return size(removeMultiLineComments(readFileLines(|project://sqat-analysis/tests/testFile.java|))) == 13;
+	int result = size(removeMultiLineComments(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
+	println("Actual result: <result>. Expected result: 13.");
+	return result == 13;
 }
 
 
@@ -71,8 +73,8 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 	list[str] linesWithCodeOnly = [];
 	
 	for (line <- lines) {
-		if (/^(\s|\t)*\/\/.*$/ := line) continue;
-		if (/^(\s|\t)*$/ := line) continue;
+		if (/^(\s|\t)*\/\/.*$/ := line) continue;	// line conatining only one-line comment 
+		if (/^(\s|\t)*$/ := line) continue;	// empty line
 		
 		linesWithCodeOnly += line;
 	}
@@ -80,25 +82,16 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 	return linesWithCodeOnly;
 }
 
-
-
 test bool testRemoveLinesWithoutCode() {
-	int s = size(removeLinesWithoutCode(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
-	println(s);
-	return s == 17;
+	int result = size(removeLinesWithoutCode(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
+	println("Actual result: <result>. Expected result: 17.");
+	return result == 17;
 }
 
 int getFileSLOC(loc file) {
 	list[str] lines = [];
 	int sloc = 0;
 	lines = removeLinesWithoutCode(removeMultiLineComments(readFileLines(file)));
-	/*
-	for (line <- lines) {
-		if (/^(\s|\t)*\/\/.*$/ := line) continue;
-		if (/^(\s|\t)*$/ := line) continue;
-		sloc+=1;
-	}
-	return sloc;*/
 	
 	return size(lines);
 }
@@ -148,7 +141,7 @@ int calculateLineCountFromSLOC(SLOC sloc) {
 }
 
 tuple[loc, int] findBiggestFile(SLOC sloc) {
-	tuple[loc file, int sloc] result = <|file://none|,-1>;
+	tuple[loc file, int sloc] result = <|file://n0n3|,-1>;
 	
 	for (s <- sloc, sloc[s] > result.sloc) {
 		result.sloc = sloc[s];
@@ -157,16 +150,3 @@ tuple[loc, int] findBiggestFile(SLOC sloc) {
 	
 	return result;
 }
-
- //(0 | println(location) | /file(location) := fs );
-
-
-/*
-int countDirs(FileSystem fs) {
-	int count = 0;
-	visit(fs) {
-		case directory(_,_): count += 1;
-	}
-	return count;
-}
-*/
