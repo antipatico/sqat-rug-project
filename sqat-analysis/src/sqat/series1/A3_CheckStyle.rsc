@@ -1,5 +1,6 @@
 module sqat::series1::A3_CheckStyle
 
+import sqat::series1::A2_McCabe;
 import Java17ish;
 import Message;
 
@@ -41,11 +42,18 @@ Bonus:
 
 */
 
+
 set[Message] checkStyle(loc project) {
   set[Message] result = {};
   
+  result = checkCyclomaticComplexity(project);
   // to be done
   // implement each check in a separate function called here. 
   
   return result;
+}
+
+set[Message] checkCyclomaticComplexity(loc project) {
+  set[Message] result = {};
+  CC complexities = cc(project);
 }
