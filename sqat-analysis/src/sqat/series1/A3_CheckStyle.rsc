@@ -56,4 +56,11 @@ set[Message] checkStyle(loc project) {
 set[Message] checkCyclomaticComplexity(loc project) {
   set[Message] result = {};
   CC complexities = cc(project);
+  for(c <- complexities) {
+  	if(c.cc > 7 && c.cc < 11)
+  	  result += warning("Complexity exceeds 8, consider refactoring.", c.method);
+  	else if(c.cc > 10)
+  	  result += warning("Complexity exceeds 10, needs refactoring.", c.method);
+  }
+  return result;
 }
