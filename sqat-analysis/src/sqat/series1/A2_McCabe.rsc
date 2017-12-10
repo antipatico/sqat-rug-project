@@ -103,6 +103,7 @@ int mcCabeComplexity(Statement body) {
 int countControlStatements (Statement body) {
 	int count = 0;
 
+	// Information on what counts as control statement was found here: http://checkstyle.sourceforge.net/config_metrics.html#CyclomaticComplexity
 	visit(body) {
 		case \for(_,_,_): count += 1;
 		case \for(_,_,_,_): count += 1;
@@ -111,7 +112,10 @@ int countControlStatements (Statement body) {
 		case \if(_,_,_): count += 1;
 		case \do(_,_): count += 1;
 		case \while(_,_): count += 1;
+		case \switch(_,_): count += 1;
 		case \case(_): count += 1;
+		case \defaultCase(): count += 1;
+		case \catch(_,_): count += 1;
 	}
 	
 	return count;
