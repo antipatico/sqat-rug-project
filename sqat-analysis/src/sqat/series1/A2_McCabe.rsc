@@ -1,7 +1,7 @@
 module sqat::series1::A2_McCabe
 
 import lang::java::jdt::m3::AST;
-//import util::ValueUI;
+import util::ValueUI; // Useful 4 debugging, use text(data) to open a new eclipse tab.
 import IO;
 
 /*
@@ -126,7 +126,14 @@ int countControlStatements (Statement body) {
 }
 
 test bool testCountControlStatements() {
-	Declaration ast = createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true);
+	//Declaration ast = createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true);
+	str testCode = 	"package dummy;
+					'public class Dummy {
+					'public void dummy() {
+					'if(true) foo();
+					'}}"; 
+	Declaration ast = createAstFromString(|file://n0n3|, testCode, true);
+	text(ast);
 	
 	controlStatementCount = 0;
 	
