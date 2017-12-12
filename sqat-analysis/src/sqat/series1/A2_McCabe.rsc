@@ -1,6 +1,7 @@
 module sqat::series1::A2_McCabe
 
 import lang::java::jdt::m3::AST;
+//import util::ValueUI;
 import IO;
 
 /*
@@ -48,11 +49,9 @@ CC cc(set[Declaration] decls) {
   CC result = {};
   
   for(Declaration d <- decls) {
-  	// probably missing results since we couldn't find a way to access location
-  	// @src doesn't work
   	visit(d) {
-  		case method(_,_,_,_,body): result[d.src] = mcCabeComplexity(body);
-  		case constructor(_,_,_,body): result[d.src] = mcCabeComplexity(body);
+  		case m:method(_,_,_,_,body): result[m.src] = mcCabeComplexity(body);
+  		case c:constructor(_,_,_,body): result[c.src] = mcCabeComplexity(body);
   	}
   }
   
