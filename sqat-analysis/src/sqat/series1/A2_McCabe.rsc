@@ -126,15 +126,17 @@ int countControlStatements (Statement body) {
 }
 
 test bool testCountControlStatements() {
-	//Declaration ast = createAstFromFile(|project://jpacman-framework/src/main/java/nl/tudelft/jpacman/level/Level.java|, true);
-	str testCode = 	"package dummy;
+	str testCode = 	"package org.dummy;
 					'public class Dummy {
 					'public void dummy() {
-					'if(true) foo();
+					'while(false) foo();
+					'for(var x : foo()) bar();
+					'for(i = 0; i != 100; i++) foo();
+					'switch(0){ case 1: ; case 2: ; default: ; }
+					'if(true) { if(false) foo(); } else bar();
 					'}}"; 
-	Declaration ast = createAstFromString(|file://n0n3|, testCode, true);
+	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
 	text(ast);
-	
 	controlStatementCount = 0;
 	
 	visit(ast) {
@@ -142,8 +144,8 @@ test bool testCountControlStatements() {
   		case constructor(_,_,_,body): controlStatementCount += countControlStatements(body);
 	}
 	
-	println("There are <controlStatementCount> control statements. Expected 20.");
+	println("There are <controlStatementCount> control statements. Expected 9.");
 	
-	return controlStatementCount == 20;
+	return controlStatementCount == 9;
 	
 }
