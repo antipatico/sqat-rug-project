@@ -47,12 +47,12 @@ list[str] removeMultiLineComments(list[str] lines) {
 	for (line <- lines) {
 		
 		if (insideComment) {
-			if (/^.*\*\/.*$/ := line) {	// comment beginning '/*'
+			if (/^.*\*\/.*$/ := line) {	// comment end '*/'
 				insideComment = false;
 			}
 		}
 		else {
-			if (/^.*\/\*.*$/ := line) {	// comment end '*/'
+			if (/^.*\/\*.*$/ := line) {	// comment beginning '/*'
 				insideComment = true;
 			}
 			if (!insideComment) linesWithoutComments += line;
@@ -61,13 +61,6 @@ list[str] removeMultiLineComments(list[str] lines) {
 	
 	return linesWithoutComments;
 }
-
-test bool testRemoveMultiLineComments() {
-	int result = size(removeMultiLineComments(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
-	println("Actual result: <result>. Expected result: 13.");
-	return result == 13;
-}
-
 
 list[str] removeLinesWithoutCode(list[str] lines) {
 	list[str] linesWithCodeOnly = [];
@@ -80,12 +73,6 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 	}
 	
 	return linesWithCodeOnly;
-}
-
-test bool testRemoveLinesWithoutCode() {
-	int result = size(removeLinesWithoutCode(readFileLines(|project://sqat-analysis/tests/testFile.java|)));
-	println("Actual result: <result>. Expected result: 17.");
-	return result == 17;
 }
 
 int getFileSLOC(loc file) {
@@ -149,4 +136,40 @@ tuple[loc, int] findBiggestFile(SLOC sloc) {
 	}
 	
 	return result;
+}
+
+test bool testSLOCOfMultilineComment() {
+	list[str] lines = ["a;", "/*", "\tcomment", "*/", "b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
+}
+
+test bool testSLOCOfMultilineCommentAndCode() {
+	list[str] lines = ["a; /*", "\tcomment", "*/ b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
+}
+
+test bool testSLOCOfSingleLineComment() {
+	list[str] lines = ["a;", "// comment", "b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
+}
+
+test bool testSLOCOfSingleLineCommentAndCode() {
+	list[str] lines = ["a; // comment", "b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
+}
+
+test bool testSLOCOfMultiLineCommentAsOneLine() {
+	list[str] lines = ["a; /* comment */", "b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
+}
+
+test bool testSLOCOfEmptyLines() {
+	list[str] lines = ["a; /*", "\t", "*/ b;"];
+	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
+	return size(processedLines) == 2;
 }
