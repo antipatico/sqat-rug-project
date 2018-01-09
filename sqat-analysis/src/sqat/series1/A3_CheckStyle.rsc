@@ -50,8 +50,7 @@ set[Message] checkStyle(loc project) {
   set[Declaration] AST = createAstsFromEclipseProject(project, true);
   
   result = checkCyclomaticComplexity(AST);
-  // to be done
-  // implement each check in a separate function called here. 
+  result += checkMethodNames(AST);
   
   return result;
 }
@@ -71,7 +70,15 @@ set[Message] checkCyclomaticComplexity(set[Declaration] AST) {
 
 
 set[Message] checkMethodNames(set[Declaration] AST) {
-
+  set[Message] result = {};
+  visit(AST) {
+  	case m:method(_,name,_,_,_): {
+  		if (!(/^[a-z][a-zA-Z0-9]*$/ := name))
+  			result += warning("Method name not following the format.",m.src);
+  	}
+  }
+  
+  return result;
 }
 
 void main() {
