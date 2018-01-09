@@ -1,8 +1,10 @@
 module sqat::series1::A3_CheckStyle
 
 import sqat::series1::A2_McCabe;
+import lang::java::jdt::m3::AST;
 import Java17ish;
 import Message;
+import IO;
 
 /*
 
@@ -45,17 +47,19 @@ Bonus:
 
 set[Message] checkStyle(loc project) {
   set[Message] result = {};
+  set[Declaration] AST = createAstsFromEclipseProject(project, true);
   
-  result = checkCyclomaticComplexity(project);
+  result = checkCyclomaticComplexity(AST);
   // to be done
   // implement each check in a separate function called here. 
   
   return result;
 }
 
-set[Message] checkCyclomaticComplexity(loc project) {
+
+set[Message] checkCyclomaticComplexity(set[Declaration] AST) {
   set[Message] result = {};
-  CC complexities = cc(project);
+  CC complexities = cc(AST);
   for(c <- complexities) {
   	if(c.cc > 7 && c.cc < 11)
   	  result += warning("Complexity exceeds 8, consider refactoring.", c.method);
@@ -63,4 +67,13 @@ set[Message] checkCyclomaticComplexity(loc project) {
   	  result += warning("Complexity exceeds 10, needs refactoring.", c.method);
   }
   return result;
+}
+
+
+set[Message] checkMethodNames(set[Declaration] AST) {
+
+}
+
+void main() {
+	println(checkStyle(|project://jpacman-framework|));
 }
