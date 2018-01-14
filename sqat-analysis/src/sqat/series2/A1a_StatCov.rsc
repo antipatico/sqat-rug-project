@@ -47,27 +47,41 @@ Questions:
 
 */
 
-alias Node = tuple[loc name, bool isTest];
+alias Node = tuple[loc name, bool isTest]; /* A node could either be a Package, a Class, a Method or a
+										 	* Interface. You can check what it actually is by running
+										 	* E.G. isPackage(mynode.name); */
+										 	
+alias Graph = rel [Node from, str label, Node to]; /* Since it seems like enums don't exist in rascal, we are using
+													* costant strings to label our edges.
+													* "DT" = define type
+													* "DM" = define method
+													* "DC" = direct call
+													* "VC" = virtual call */
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
 set[Node] getNodesFromM3(M3 m3) {
-	set[Node] Nodes = {};
-	
+	set[Node] result = {};
 	for(entity <- m3.declarations) {
 		loc n = entity.name;
-		bool isTest = contains(entity.src.path, "/test/");
+		bool isTest = !isPackage(n) && contains(entity.src.path, "/test/");
 		if(isMethod(n) || isClass(n) || isPackage(n) || isInterface(n))
-			Nodes += <n, isTest>;
+			result += <n, isTest>;
 	}
-	
-	return Nodes;
+	return result;
+}
+
+Graph constructGraph(M3 m3, set[Node] nodes) {
+	Graph result = {};
+	for(Node n <- nodes, isPackage(n.name)) {
+		for(loc cu <- m3.containment[n.name], isCompilationUnit(cu))
+			println(m3.containment[cu]);
+	}
+	return result;
 }
 
 void main() {
-	set[Node] Nodes = getNodesFromM3(m3);
-	rel[Node, str, Node] Graph;
-	
-	
-	text(Nodes);
+	set[Node] nodes = getNodesFromM3(m3);
+	Graph g = constructGraph(m3, nodes);
+	//text(m3.containment);
 }
