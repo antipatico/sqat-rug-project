@@ -5,6 +5,7 @@ import lang::java::jdt::m3::AST;
 import Java17ish;
 import Message;
 import IO;
+import List;
 
 /*
 
@@ -51,6 +52,7 @@ set[Message] checkStyle(loc project) {
   
   result = checkCyclomaticComplexity(AST);
   result += checkMethodNames(AST);
+  result += checkParameterNumber(AST, 6);
   
   return result;
 }
@@ -76,6 +78,17 @@ set[Message] checkMethodNames(set[Declaration] AST) {
   		if (!(/^[a-z][a-zA-Z0-9]*$/ := name))
   			result += warning("Method name not following the format.",m.src);
   	}
+  }
+  
+  return result;
+}
+
+set[Message] checkParameterNumber(set[Declaration] AST, int maxParameterNumber) {
+  set[Message] result = {};
+  visit(AST) {
+    case m:method(_,_,parameters,_,_): {
+      if (size(parameters) > maxParameterNumber) result += warning("Parameter number exceeds the limit of <maxParameterNumber>!", m.src); 
+    }
   }
   
   return result;
