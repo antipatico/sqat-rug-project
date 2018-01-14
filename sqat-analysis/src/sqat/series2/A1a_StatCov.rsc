@@ -47,11 +47,8 @@ Questions:
 
 */
 
-alias Node = tuple[loc name, bool isTest]; /* A node could either be a Package, a Class, a Method or a
-										 	* Interface. You can check what it actually is by running
-										 	* E.G. isPackage(mynode.name); */
 										 	
-alias Graph = rel [Node from, str label, Node to]; /* Since it seems like enums don't exist in rascal, we are using
+alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums don't exist in rascal, we are using
 													* costant strings to label our edges.
 													* "DT" = define type
 													* "DM" = define method
@@ -60,28 +57,27 @@ alias Graph = rel [Node from, str label, Node to]; /* Since it seems like enums 
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
-set[Node] getNodesFromM3(M3 m3) {
-	set[Node] result = {};
-	for(entity <- m3.declarations) {
-		loc n = entity.name;
-		bool isTest = !isPackage(n) && contains(entity.src.path, "/test/");
-		if(isMethod(n) || isClass(n) || isPackage(n) || isInterface(n))
-			result += <n, isTest>;
+Graph constructPackage(loc package,  Graph result = {}) {
+	if(isPackage(package)) {
+		for(loc cu <- m3.containment[package], isCompilationUnit(cu)) {
+			for(n <- m3.containment[cu], isClass(n) || isInterface(n)) {
+				result += { package, "DT", n };
+			}
+		}
 	}
 	return result;
 }
 
-Graph constructGraph(M3 m3, set[Node] nodes) {
+Graph constructGraph() {
 	Graph result = {};
-	for(Node n <- nodes, isPackage(n.name)) {
-		for(loc cu <- m3.containment[n.name], isCompilationUnit(cu))
-			println(m3.containment[cu]);
+	for(n <- m3.declarations, isPackage(n.name)) {
+		result += constructPackage(n.name);
 	}
 	return result;
 }
 
 void main() {
-	set[Node] nodes = getNodesFromM3(m3);
-	Graph g = constructGraph(m3, nodes);
+	Graph g = constructGraph();
+	text(g);
 	//text(m3.containment);
 }
