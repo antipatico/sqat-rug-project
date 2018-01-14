@@ -1,6 +1,7 @@
 module sqat::series2::A1a_StatCov
 
 import lang::java::jdt::m3::Core;
+import util::ValueUI;
 
 /*
 
@@ -45,5 +46,22 @@ Questions:
 */
 
 
-M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman-framework|);
+alias Node = tuple[loc name, str label, bool isTest];
 
+void main() {
+	set[Node] Nodes = {};
+	rel[Node, str, Node] Graph;
+	
+	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+	
+	for(entity <- m3.declarations) {
+		Node newNode = <|file://n0n3|, "", false>;
+		newNode.name = entity.name;
+		newNode.isTest = false;
+		//if (M3.isClass(entity.name))
+		if (isPackage(entity.name)) newNode.label = "Package";
+		if (newNode.label != "" ) Nodes += newNode;
+	}
+	
+	text(Nodes);
+}
