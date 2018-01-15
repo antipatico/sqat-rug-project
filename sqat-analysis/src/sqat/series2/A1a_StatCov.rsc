@@ -58,14 +58,15 @@ alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums do
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
 Graph constructPackage(loc package,  Graph result = {}) {
+	Graph res = {};
 	if(isPackage(package)) {
 		for(loc cu <- m3.containment[package], isCompilationUnit(cu)) {
 			for(n <- m3.containment[cu], isClass(n) || isInterface(n)) {
-				result += { package, "DT", n };
+				res += <package, "DT", n>;
 			}
 		}
 	}
-	return result;
+	return result+res;
 }
 
 Graph constructGraph() {
