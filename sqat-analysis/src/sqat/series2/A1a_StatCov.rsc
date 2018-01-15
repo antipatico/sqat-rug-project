@@ -75,53 +75,36 @@ Graph recursiveConstructDT(loc package) {
 	return result;
 }
 
-Graph constructDTEntries(loc package) {
+Graph constructDTEntries(M3 m3) {
 	Graph result = {};
-	for(loc cu <- m3.containment[package]) {
-		if(isPackage(cu))
-			result += constructDTEntries(cu);
-		else if (isCompilationUnit(cu)) {
-			for(n <- m3.containment[cu]) {
-				if(isClass(n) || isInterface(n))
-					result += <package, "DT", n>;
-				else if(isPackage(n))
-					result += constructDTEntries(cu);
-			}
-		}
+
+	for(n <- m3.declarations, isPackage(n.name)) {
+		result += recursiveConstructDT(n.name);
 	}
 	
-	for(c <- m3.declarations, isClass(c.name))
-		for(nc <- m3.containment[c.name], isClass(nc) || isInterface(nc))
-			result += <c.name, "DT", nc>;
-			
-	//for(r <- m3.containment, isClass(r.from) && isClass(r.to))
-		//result += <r.from, "DT", nc.to>;
+	// The next piece of code is used to handled classes and interfaces declared inside classes.
+	// We decided that it mens a DT edge is present from the father class and the children.
+	for(r <- m3.containment, isClass(r.from) && (isClass(r.to) || isInterface(r.to)))
+		result += <r.from, "DT", r.to>;
 	
 	return result;
 }
 
 Graph constructGraph() {
-	Graph result = {};
-	for(n <- m3.declarations, isPackage(n.name)) {
-		result += constructDTEntries(n.name);
-	}
+	Graph result = constructDTEntries(m3);
 	return result;
 }
 
 void main() {
 	Graph g = constructGraph();
 	text(g);
-	//text(m3.containment);
 }
 
 test bool testConstructDTEntries() {
-	Graph G = {};
 	int classesAndInterfaceCount = 0;
+	Graph G = constructDTEntries(m3);
 	
-	for(n <- m3.declarations) {
-		if(isPackage(n.name))
-			G += constructDTEntries(n.name);
-		if(isClass(n.name) || isInterface(n.name))
+	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name)) {
 			classesAndInterfaceCount += 1;
 	}
 	
