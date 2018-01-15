@@ -2,6 +2,7 @@ module sqat::series2::A1a_StatCov
 
 import IO;
 import String;
+import Set;
 import lang::java::jdt::m3::Core;
 import util::ValueUI;
 
@@ -64,8 +65,11 @@ Graph constructPackage(loc package) {
 			if(isPackage(cu))
 				result += constructPackage(cu);
 			else if (isCompilationUnit(cu)) {
-				for(n <- m3.containment[cu], isClass(n) || isInterface(n)) {
-					result += <package, "DT", n>;
+				for(n <- m3.containment[cu]) {
+					if(isClass(n) || isInterface(n))
+						result += <package, "DT", n>;
+					else if(isPackage(n))
+						result += constructPackage(cu);
 				}
 			}
 		}
@@ -85,4 +89,27 @@ void main() {
 	Graph g = constructGraph();
 	text(g);
 	//text(m3.containment);
+}
+
+test bool testConstructPackage() {
+	Graph G = {};
+	int classes_n_interf_count = 0;
+	
+	println("##### ALL ####");
+	
+	for(n <- m3.declarations) {
+		if(isPackage(n.name))
+			G += constructPackage(n.name);
+		if(isClass(n.name) || isInterface(n.name)) {
+			classes_n_interf_count += 1;
+			println(n.name);
+			}
+	}
+	
+	println("##### IN g ####");
+	for(tuple[loc l1, str a, loc l2] x <- G) {
+		println(x.l2);
+	}
+	
+	return size(G) == classes_n_interf_count;
 }
