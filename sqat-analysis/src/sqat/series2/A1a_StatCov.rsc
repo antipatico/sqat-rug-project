@@ -58,29 +58,52 @@ alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums do
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
-Graph constructPackage(loc package) {
+Graph recursiveConstructDT(loc package) {
 	Graph result = {};
-	if(isPackage(package)) {
-		for(loc cu <- m3.containment[package]) {
-			if(isPackage(cu))
-				result += constructPackage(cu);
-			else if (isCompilationUnit(cu)) {
-				for(n <- m3.containment[cu]) {
-					if(isClass(n) || isInterface(n))
-						result += <package, "DT", n>;
-					else if(isPackage(n))
-						result += constructPackage(cu);
-				}
+	for(loc cu <- m3.containment[package]) {
+		if(isPackage(cu))
+			result += recursiveConstructDT(cu);
+		else if (isCompilationUnit(cu)) {
+			for(n <- m3.containment[cu]) {
+				if(isClass(n) || isInterface(n))
+					result += <package, "DT", n>;
+				else if(isPackage(n))
+					result += recursiveConstructDT(cu);
 			}
 		}
 	}
 	return result;
 }
 
+Graph constructDTEntries(loc package) {
+	Graph result = {};
+	for(loc cu <- m3.containment[package]) {
+		if(isPackage(cu))
+			result += constructDTEntries(cu);
+		else if (isCompilationUnit(cu)) {
+			for(n <- m3.containment[cu]) {
+				if(isClass(n) || isInterface(n))
+					result += <package, "DT", n>;
+				else if(isPackage(n))
+					result += constructDTEntries(cu);
+			}
+		}
+	}
+	
+	for(c <- m3.declarations, isClass(c.name))
+		for(nc <- m3.containment[c.name], isClass(nc) || isInterface(nc))
+			result += <c.name, "DT", nc>;
+			
+	//for(r <- m3.containment, isClass(r.from) && isClass(r.to))
+		//result += <r.from, "DT", nc.to>;
+	
+	return result;
+}
+
 Graph constructGraph() {
 	Graph result = {};
 	for(n <- m3.declarations, isPackage(n.name)) {
-		result += constructPackage(n.name);
+		result += constructDTEntries(n.name);
 	}
 	return result;
 }
@@ -91,25 +114,17 @@ void main() {
 	//text(m3.containment);
 }
 
-test bool testConstructPackage() {
+test bool testConstructDTEntries() {
 	Graph G = {};
-	int classes_n_interf_count = 0;
-	
-	println("##### ALL ####");
+	int classesAndInterfaceCount = 0;
 	
 	for(n <- m3.declarations) {
 		if(isPackage(n.name))
-			G += constructPackage(n.name);
-		if(isClass(n.name) || isInterface(n.name)) {
-			classes_n_interf_count += 1;
-			println(n.name);
-			}
+			G += constructDTEntries(n.name);
+		if(isClass(n.name) || isInterface(n.name))
+			classesAndInterfaceCount += 1;
 	}
 	
-	println("##### IN g ####");
-	for(tuple[loc l1, str a, loc l2] x <- G) {
-		println(x.l2);
-	}
-	
-	return size(G) == classes_n_interf_count;
+	println("Expected the graph to be size <classesAndInterfaceCount>; actual value: <size(G)>");
+	return size(G) == classesAndInterfaceCount;
 }
