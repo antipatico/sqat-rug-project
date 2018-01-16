@@ -77,16 +77,21 @@ Graph recursiveConstructDT(loc package) {
 }
 */
 
+bool isDT(loc l) {
+	return isClass(l) || isInterface(l) || isEnum(l);
+}
+
 Graph recursiveConstructDT(M3 m3, loc package, loc target) {
 	Graph result = {};
+	loc nextPackage = package;
+	
 	if(isPackage(target)) 
-		for(x <- m3.containment[target])
-			result += recursiveConstructDT(m3, target, x);
-	if (isClass(target) || isInterface(target))
+		nextPackage = target;
+	if (isDT(target))
 		result += <package, "DT", target>;
-	if (isCompilationUnit(target) || isClass(target) || isInterface(target))
+	if (isPackage(target) || isCompilationUnit(target) || isDT(target))
 		for(x <- m3.containment[target])
-			result += recursiveConstructDT(m3, package, x);
+			result += recursiveConstructDT(m3, nextPackage, x);	
 		 
 	return result;
 }
@@ -133,7 +138,7 @@ test bool testConstructDTEntries() {
 	int classesAndInterfaceCount = 0;
 	Graph G = constructDTEntries(m3);
 	
-	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name))
+	for(n <- m3.declarations, isDT(n.name))
 		classesAndInterfaceCount += 1;
 	
 	println("Expected the graph to be size <classesAndInterfaceCount>; actual value: <size(G)>");
