@@ -82,16 +82,23 @@ Graph constructDTEntries(M3 m3) {
 		result += recursiveConstructDT(n.name);
 	}
 	
-	// The next piece of code is used to handled classes and interfaces declared inside classes.
-	// We decided that it mens a DT edge is present from the father class and the children.
-	for(r <- m3.containment, isClass(r.from) && (isClass(r.to) || isInterface(r.to)))
-		result += <r.from, "DT", r.to>;
+	// The next piece of code is used to handle classes and interfaces declared inside classes.
+	for(r <- m3.containment, isClass(r.from) && (isClass(r.to) || isInterface(r.to))) {
+		for (r2 <- result, r2.to == r.from && r2.label == "DT")
+			result += <r2.from, "DT", r.to>;
+	}
+	
+	return result;
+}
+
+Graph constructDMEntries(M3 m3) {
+	Graph result = {};
 	
 	return result;
 }
 
 Graph constructGraph() {
-	Graph result = constructDTEntries(m3);
+	Graph result = constructDTEntries(m3) + constructDMEntries(m3);
 	return result;
 }
 
