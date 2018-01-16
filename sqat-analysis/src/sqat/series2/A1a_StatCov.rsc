@@ -58,25 +58,6 @@ alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums do
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
-/*
-Graph recursiveConstructDT(loc package) {
-	Graph result = {};
-	for(loc cu <- m3.containment[package]) {
-		if(isPackage(cu))
-			result += recursiveConstructDT(cu);
-		else if (isCompilationUnit(cu)) {
-			for(n <- m3.containment[cu]) {
-				if(isClass(n) || isInterface(n))
-					result += <package, "DT", n>;
-				else if(isPackage(n))
-					result += recursiveConstructDT(cu);
-			}
-		}
-	}
-	return result;
-}
-*/
-
 bool isDT(loc l) {
 	return isClass(l) || isInterface(l) || isEnum(l);
 }
@@ -99,35 +80,35 @@ Graph recursiveConstructDT(M3 m3, loc package, loc target) {
 Graph constructDTEntries(M3 m3) {
 	Graph result = {};
 
-	for(n <- m3.declarations, isPackage(n.name)) {
+	for(n <- m3.declarations, isPackage(n.name))
 		result += recursiveConstructDT(m3, n.name, n.name);
-	}
-	/*
-	// The next piece of code is used to handle classes and interfaces declared inside classes.
-	for(r <- m3.containment, isClass(r.from) && (isClass(r.to) || isInterface(r.to))) {
-		for (r2 <- result, r2.to == r.from && r2.label == "DT")
-			result += <r2.from, "DT", r.to>;
-	}
-	*/
-	
+		
 	return result;
+}
+
+Graph recursiveConstructDM(M3 m3, loc parent, loc target) {
+	Graph result = {};
+		
+	if(isDT(target))
+		for(x <- m3.containment[target])
+			result += recursiveConstructDM(m3, target, x);
+	
+	if(isMethod(target))
+		result += <parent, "DM", target>;
+		
+	return result; 
 }
 
 Graph constructDMEntries(M3 m3) {
 	Graph result = {};
 	
-	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name))
-		for(meth <- m3.containment[n.name], isMethod(meth))
-			result += <n.name, "DM", meth>;
-	
-	
+	for(n <- m3.declarations, isDT(n.name))
+		result += recursiveConstructDM(m3, n.name, n.name);
+		
 	return result;
 }
 
-Graph constructGraph() {
-	Graph result = constructDTEntries(m3) + constructDMEntries(m3);
-	return result;
-}
+Graph constructGraph() = constructDTEntries(m3) + constructDMEntries(m3);
 
 void main() {
 	Graph g = constructGraph();
@@ -135,31 +116,24 @@ void main() {
 }
 
 test bool testConstructDTEntries() {
-	int classesAndInterfaceCount = 0;
+	int DTCount = 0;
 	Graph G = constructDTEntries(m3);
 	
 	for(n <- m3.declarations, isDT(n.name))
-		classesAndInterfaceCount += 1;
+		DTCount += 1;
 	
-	println("Expected the graph to be size <classesAndInterfaceCount>; actual value: <size(G)>");
-	return size(G) == classesAndInterfaceCount;
+	println("Expected the graph to be size <DTCount>; actual value: <size(G)>");
+	return size(G) == DTCount;
 }
 
 test bool testConstructDMEntries() {
-	//set[loc] debug = {};
 	int methodsCount = 0;
 	Graph G = constructDMEntries(m3);
 	
-	for(n <- m3.declarations, isMethod(n.name)) {
-		//debug += n.name;
+	// We filter out anonymous functions.
+	for(n <- m3.declarations, isMethod(n.name) && ! contains(n.name.path, "$anonymous"))
 		methodsCount += 1;
-	}
-	
-	//for(r <- G) {
-	//	debug += r.to;
-	//}
-	
+		
 	println("Expected the DM graph to be size <methodsCount>; actual size: <size(G)>");
-	//text(debug);
 	return size(G) == methodsCount;
 }
