@@ -94,6 +94,11 @@ Graph constructDTEntries(M3 m3) {
 Graph constructDMEntries(M3 m3) {
 	Graph result = {};
 	
+	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name))
+		for(meth <- m3.containment[n.name], isMethod(meth))
+			result += <n.name, "DM", meth>;
+	
+	
 	return result;
 }
 
@@ -111,10 +116,28 @@ test bool testConstructDTEntries() {
 	int classesAndInterfaceCount = 0;
 	Graph G = constructDTEntries(m3);
 	
-	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name)) {
-			classesAndInterfaceCount += 1;
-	}
+	for(n <- m3.declarations, isClass(n.name) || isInterface(n.name))
+		classesAndInterfaceCount += 1;
 	
 	println("Expected the graph to be size <classesAndInterfaceCount>; actual value: <size(G)>");
 	return size(G) == classesAndInterfaceCount;
+}
+
+test bool testConstructDMEntries() {
+	set[loc] debug = {};
+	int methodsCount = 0;
+	Graph G = constructDMEntries(m3);
+	
+	for(n <- m3.declarations, isMethod(n.name)) {
+		//debug += n.name;
+		methodsCount += 1;
+	}
+	
+	for(r <- G) {
+		debug += r.to;
+	}
+	
+	println("Expected the DM graph to be size <methodsCount>; actual size: <size(G)>");
+	text(debug);
+	return size(G) == methodsCount;
 }
