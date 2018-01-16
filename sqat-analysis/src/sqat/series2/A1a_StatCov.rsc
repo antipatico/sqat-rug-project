@@ -108,10 +108,10 @@ Graph constructDMEntries(M3 m3) {
 	return result;
 }
 
-Graph constructGraph() = constructDTEntries(m3) + constructDMEntries(m3);
+Graph constructGraph(M3 m3) = constructDTEntries(m3) + constructDMEntries(m3);
 
 void main() {
-	Graph g = constructGraph();
+	Graph g = constructGraph(m3);
 	text(g);
 }
 
