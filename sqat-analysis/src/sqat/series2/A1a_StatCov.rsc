@@ -58,6 +58,7 @@ alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums do
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
+/*
 Graph recursiveConstructDT(loc package) {
 	Graph result = {};
 	for(loc cu <- m3.containment[package]) {
@@ -74,19 +75,35 @@ Graph recursiveConstructDT(loc package) {
 	}
 	return result;
 }
+*/
+
+Graph recursiveConstructDT(M3 m3, loc package, loc target) {
+	Graph result = {};
+	if(isPackage(target)) 
+		for(x <- m3.containment[target])
+			result += recursiveConstructDT(m3, target, x);
+	if (isClass(target) || isInterface(target))
+		result += <package, "DT", target>;
+	if (isCompilationUnit(target) || isClass(target) || isInterface(target))
+		for(x <- m3.containment[target])
+			result += recursiveConstructDT(m3, package, x);
+		 
+	return result;
+}
 
 Graph constructDTEntries(M3 m3) {
 	Graph result = {};
 
 	for(n <- m3.declarations, isPackage(n.name)) {
-		result += recursiveConstructDT(n.name);
+		result += recursiveConstructDT(m3, n.name, n.name);
 	}
-	
+	/*
 	// The next piece of code is used to handle classes and interfaces declared inside classes.
 	for(r <- m3.containment, isClass(r.from) && (isClass(r.to) || isInterface(r.to))) {
 		for (r2 <- result, r2.to == r.from && r2.label == "DT")
 			result += <r2.from, "DT", r.to>;
 	}
+	*/
 	
 	return result;
 }
@@ -124,7 +141,7 @@ test bool testConstructDTEntries() {
 }
 
 test bool testConstructDMEntries() {
-	set[loc] debug = {};
+	//set[loc] debug = {};
 	int methodsCount = 0;
 	Graph G = constructDMEntries(m3);
 	
@@ -133,11 +150,11 @@ test bool testConstructDMEntries() {
 		methodsCount += 1;
 	}
 	
-	for(r <- G) {
-		debug += r.to;
-	}
+	//for(r <- G) {
+	//	debug += r.to;
+	//}
 	
 	println("Expected the DM graph to be size <methodsCount>; actual size: <size(G)>");
-	text(debug);
+	//text(debug);
 	return size(G) == methodsCount;
 }
