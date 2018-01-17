@@ -121,15 +121,11 @@ Graph constructDCEntries(M3 m3) {
 Graph constructVCEntries(M3 m3) {
 	Graph result = {};
 	
-	for(c <- m3.methodInvocation) {
-		//result += <c.from, "DC/VC", c.to>;
+	for(c <- m3.methodInvocation, !isClass(c.from)) {
 		for(vc <- m3.methodOverrides, vc.to == c.to) {
 			result += <c.from, "VC", c.to>;
 			result += <c.from, "VC", vc.from>;
 		}
-		
-		//for(vc <- m3.methodOverrides[c.to])
-		//	result += <c.from, "VC", vc>;
 	}
 	
 	return result;
