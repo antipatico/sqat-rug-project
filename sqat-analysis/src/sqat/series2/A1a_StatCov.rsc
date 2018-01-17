@@ -108,7 +108,34 @@ Graph constructDMEntries(M3 m3) {
 	return result;
 }
 
-Graph constructGraph(M3 m3) = constructDTEntries(m3) + constructDMEntries(m3);
+Graph constructDCEntries(M3 m3) {
+	Graph result = {};
+	
+	for(c <- m3.methodInvocation, size(m3.methodOverrides[c.to]) < 1) {
+		result += <c.from, "DC", c.to>;
+	}
+	
+	return result;
+}
+
+Graph constructVCEntries(M3 m3) {
+	Graph result = {};
+	
+	for(c <- m3.methodInvocation) {
+		//result += <c.from, "DC/VC", c.to>;
+		for(vc <- m3.methodOverrides, vc.to == c.to) {
+			result += <c.from, "VC", c.to>;
+			result += <c.from, "VC", vc.from>;
+		}
+		
+		//for(vc <- m3.methodOverrides[c.to])
+		//	result += <c.from, "VC", vc>;
+	}
+	
+	return result;
+}
+
+Graph constructGraph(M3 m3) = constructDTEntries(m3) + constructDMEntries(m3) + constructDCEntries(m3) + constructVCEntries(m3);
 
 void main() {
 	Graph g = constructGraph(m3);
