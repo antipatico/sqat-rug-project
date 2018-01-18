@@ -166,8 +166,10 @@ void main() {
 	Graph g = constructGraph(m3);
 	set[loc] testClasses = identifyTestClasses(m3);
 	set[loc] coveredMethods = slice(g, testClasses);
-
+	real coverage = size(coveredMethods) * 1.0 / size({n | n <- g, n.label=="DM"});
 	text(coveredMethods);
+	println("Coverage is <coverage * 100>%");
+	println("Coverage mentioned in the paper is 88.06%");
 }
 
 test bool testConstructDTEntries() {
