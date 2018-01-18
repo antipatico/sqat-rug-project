@@ -113,7 +113,7 @@ Graph constructDMEntries(M3 m3) {
 Graph constructDCEntries(M3 m3) {
 	Graph result = {};
 	
-	for(c <- m3.methodInvocation, size(m3.methodOverrides[c.to]) < 1) {
+	for(c <- m3.methodInvocation, !startsWith(c.to.path, "/java") && !(contains(c.from.path, "$anonymous") || contains(c.to.path, "$anonymous"))) {
 		result += <c.from, "DC", c.to>;
 	}
 	
@@ -123,8 +123,8 @@ Graph constructDCEntries(M3 m3) {
 Graph constructVCEntries(M3 m3) {
 	Graph result = {};
 	
-	for(c <- m3.methodInvocation, !isClass(c.from)) {
-		for(vc <- m3.methodOverrides, vc.to == c.to) {
+	for(c <- m3.methodInvocation, !isClass(c.from) && !startsWith(c.to.path, "/java") ) {
+		for(vc <- m3.methodOverrides, vc.to == c.to && !startsWith(vc.from.path, "/java")) {
 			result += <c.from, "VC", c.to>;
 			result += <c.from, "VC", vc.from>;
 		}
@@ -143,10 +143,31 @@ set[loc] identifyTestClasses(M3 m3) {
 	return result;
 }
 
+set[loc] slice(Graph g, set[loc] testClasses) {
+	set[loc] result = {};
+	rel[loc from, loc to] calls = {<x.from, x.to> | x <- g, x.label == "DC" || x.label == "VC"};
+	rel[loc from, loc to] R = calls;
+	
+	solve(R) {
+		R = R + (R o calls);
+	}
+	
+	for(tc <- testClasses) {
+		for (n <- g, n.label == "DM" && n.from == tc) {
+			result += n.to;
+			result += {r | r <- R[n.to]};
+		}
+	}
+	
+	return result;
+}
+
 void main() {
 	Graph g = constructGraph(m3);
 	set[loc] testClasses = identifyTestClasses(m3);
-	text(testClasses);
+	set[loc] coveredMethods = slice(g, testClasses);
+
+	text(coveredMethods);
 }
 
 test bool testConstructDTEntries() {
