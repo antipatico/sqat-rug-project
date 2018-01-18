@@ -171,3 +171,10 @@ test bool testConstructDMEntries() {
 	println("Expected the DM graph to be size <methodsCount>; actual size: <size(G)>");
 	return size(G) == methodsCount;
 }
+
+test bool testIdentifyTestClasses() {
+	int testClassCount = size(identifyTestClasses(m3)); 
+	
+	println("Expected class count is 12; actual count: <testClassCount>");
+	return testClassCount == 12;
+}
