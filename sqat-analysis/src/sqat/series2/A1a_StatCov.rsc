@@ -55,6 +55,8 @@ alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums do
 													* "DM" = define method
 													* "DC" = direct call
 													* "VC" = virtual call */
+													
+
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
@@ -133,9 +135,18 @@ Graph constructVCEntries(M3 m3) {
 
 Graph constructGraph(M3 m3) = constructDTEntries(m3) + constructDMEntries(m3) + constructDCEntries(m3) + constructVCEntries(m3);
 
+set[loc] identifyTestClasses(M3 m3) {
+	set[loc] result = {};
+	for(n <- m3.declarations, isDT(n.name) && contains(n.src.path, "/test/")) {
+		result += n.name;
+	}
+	return result;
+}
+
 void main() {
 	Graph g = constructGraph(m3);
-	text(g);
+	set[loc] testClasses = identifyTestClasses(m3);
+	text(testClasses);
 }
 
 test bool testConstructDTEntries() {
