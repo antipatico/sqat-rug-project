@@ -202,6 +202,14 @@ test bool testConstructDMEntries() {
 	return size(G) == methodsCount;
 }
 
+test bool testConstructDCEntries() {
+	M3 m3 = createM3FromFile(|project://sqat-analysis/src/sqat/series2/Dummy.java|);
+	int DCcount = size(constructDCEntries(m3));
+	
+	println("Expected the DC graph to be size 2; actual size: <DCcount>");
+	return DCcount == 2;
+}
+
 test bool testIdentifyTestClasses() {
 	int testClassCount = size(identifyTestClasses(m3)); 
 	
