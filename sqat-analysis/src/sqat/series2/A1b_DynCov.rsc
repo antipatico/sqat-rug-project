@@ -3,6 +3,8 @@ module sqat::series2::A1b_DynCov
 import Java17ish;
 import ParseTree;
 import util::FileSystem;
+import util::ValueUI;
+import IO;
 
 /*
 
@@ -45,7 +47,16 @@ Tips:
 
 
 void methodCoverage(loc project) {
-  // to be done
+	for (f <- files(|project://jpacman-framework/src/main|), f.extension == "java") {
+	    Tree tree = parseJava(f);
+	    println(f);
+	    BlockStm insertedStm = (BlockStm)`CoverageAPI("test","test");`;
+	    visit(tree) {
+	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm insertedStm> <BlockStm* stms>}`
+	    }
+	    println(unparse(tree));
+	    break;
+  	}
 }
 
 void lineCoverage(loc project) {
