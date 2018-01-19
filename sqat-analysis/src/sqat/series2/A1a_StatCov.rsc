@@ -147,6 +147,7 @@ set[loc] slice(Graph g, set[loc] testClasses) {
 	set[loc] result = {};
 	rel[loc from, loc to] calls = {<x.from, x.to> | x <- g, x.label == "DC" || x.label == "VC"};
 	rel[loc from, loc to] R = calls;
+	set[loc] testMethods = getTestMethods(g, testClasses);
 	
 	solve(R) {
 		R = R + (R o calls);
@@ -154,20 +155,26 @@ set[loc] slice(Graph g, set[loc] testClasses) {
 	
 	for(tc <- testClasses) {
 		for (n <- g, n.label == "DM" && n.from == tc) {
-			result += n.to;
-			result += {r | r <- R[n.to]};
+			result += {r | r <- R[n.to] && !(r in testMethods)};
 		}
 	}
 	
 	return result;
 }
 
+set[loc] getTestMethods(Graph g, set[loc] testClasses) {
+	set[loc] result = {};
+	for (n <- g, n.label == "DM" && n.from in testClasses) {
+		result += n.to;
+	}
+	return result;
+} 
+
 void main() {
 	Graph g = constructGraph(m3);
 	set[loc] testClasses = identifyTestClasses(m3);
 	set[loc] coveredMethods = slice(g, testClasses);
-	real coverage = size(coveredMethods) * 1.0 / size({n | n <- g, n.label=="DM"});
-	text(coveredMethods);
+	real coverage = size(coveredMethods) * 1.0 / size({n | n <- g, n.label=="DM" && !(n.from in testClasses)});
 	println("Coverage is <coverage * 100>%");
 	println("Coverage mentioned in the paper is 88.06%");
 }
