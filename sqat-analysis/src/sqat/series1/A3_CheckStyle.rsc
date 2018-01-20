@@ -6,6 +6,7 @@ import Java17ish;
 import Message;
 import IO;
 import List;
+import Set;
 
 /*
 
@@ -96,4 +97,57 @@ set[Message] checkParameterNumber(set[Declaration] AST, int maxParameterNumber) 
 
 void main() {
 	println(checkStyle(|project://jpacman-framework|));
+}
+
+test bool testCheckCyclomaticComplexity() {
+	str testCode = 	"package org.dummy;
+					'public class Dummy {
+					'public void dummy() {
+					'while(false) foo();
+					'for(var x : foo()) bar();
+					'for(i = 0; i != 100; i++) foo();
+					'switch(0){ case 1: ; case 2: ; default: ; }
+					'if(true) { if(false) foo(); } else bar();
+					'}}"; 
+	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
+	
+	set[Message] messages = checkCyclomaticComplexity({ast});
+	
+	return size(messages) == 1;
+}
+
+test bool testCheckMethodNames() {
+	str testCode = 	"package org.dummy;
+					'public class Dummy {
+					'public void Dummy() {
+					'while(false) foo();
+					'for(var x : foo()) bar();
+					'for(i = 0; i != 100; i++) foo();
+					'switch(0){ case 1: ; case 2: ; default: ; }
+					'if(true) { if(false) foo(); } else bar();
+					'}}"; 
+	
+	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
+	
+	set[Message] messages = checkMethodNames({ast});
+	
+	return size(messages) == 1;
+}
+
+test bool testCheckParameterNumber() {
+	str testCode = 	"package org.dummy;
+					'public class Dummy {
+					'public void Dummy(int a, int b, int c, int d) {
+					'while(false) foo();
+					'for(var x : foo()) bar();
+					'for(i = 0; i != 100; i++) foo();
+					'switch(0){ case 1: ; case 2: ; default: ; }
+					'if(true) { if(false) foo(); } else bar();
+					'}}"; 
+	
+	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
+	
+	set[Message] messages = checkParameterNumber({ast}, 3);
+	
+	return size(messages) == 1;
 }
