@@ -131,7 +131,6 @@ test bool testCountControlStatements() {
 					'if(true) { if(false) foo(); } else bar();
 					'}}"; 
 	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
-	text(ast);
 	controlStatementCount = 0;
 	
 	visit(ast) {
