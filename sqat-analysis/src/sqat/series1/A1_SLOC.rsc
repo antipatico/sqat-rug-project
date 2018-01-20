@@ -37,33 +37,17 @@ Bonus:
 
 alias SLOC = map[loc file, int sloc];
 
-
-list[str] removeMultiLineComments(list[str] lines) {
-	list[str] linesWithoutComments = [];
-	
-	bool insideComment = false;
-	int commentLines = 0;
-	
-	for (line <- lines) {
-		
-		if (insideComment) {
-			if (/^.*\*\/.*$/ := line) {	// comment end '*/'
-				insideComment = false;
-			}
-		}
-		else {
-			if (/^.*\/\*.*$/ := line) {	// comment beginning '/*'
-				insideComment = true;
-			}
-			if (!insideComment) linesWithoutComments += line;
-		}
+str removeMultiLineComments(str sourceCode) {
+	while(/<mlc:\/\*(.|[\r\n])*?\*\/>/ := sourceCode) {
+		sourceCode = replaceAll(sourceCode, mlc, "");
 	}
-	
-	return linesWithoutComments;
+	return sourceCode;
 }
 
-list[str] removeLinesWithoutCode(list[str] lines) {
+
+list[str] removeLinesWithoutCode(str sourceCode) {
 	list[str] linesWithCodeOnly = [];
+	list[str] lines = split("\n", sourceCode);
 	
 	for (line <- lines) {
 		if (/^(\s|\t)*\/\/.*$/ := line) continue;	// line conatining only one-line comment 
@@ -78,7 +62,7 @@ list[str] removeLinesWithoutCode(list[str] lines) {
 int getFileSLOC(loc file) {
 	list[str] lines = [];
 	int sloc = 0;
-	lines = removeLinesWithoutCode(removeMultiLineComments(readFileLines(file)));
+	lines = removeLinesWithoutCode(removeMultiLineComments(readFile(file)));
 	
 	return size(lines);
 }
