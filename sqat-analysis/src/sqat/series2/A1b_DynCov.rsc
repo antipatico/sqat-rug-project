@@ -52,6 +52,7 @@ void methodCoverage(loc project) {
 	    println(f);
 	    BlockStm insertedStm = (BlockStm)`CoverageAPI("test","test");`;
 	    tree = visit(tree) {
+	    	case (MethodDecHead) `<MethodDecHead mdh>`: println(mdh);
 	    	case (ClassDecHead) `<ClassDecHead cdh>`: println(cdh);
 	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm insertedStm> <BlockStm* stms>}`
 	    }
