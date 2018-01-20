@@ -177,6 +177,7 @@ void main() {
 	real coverage = size(coveredMethods) * 1.0 / size({n | n <- g, n.label=="DM" && !(n.from in testClasses)});
 	println("Coverage is <coverage * 100>%");
 	println("Coverage mentioned in the paper is 88.06%");
+	println("Coverage determined by EclEmma is 76.00%");
 }
 
 test bool testConstructDTEntries() {
