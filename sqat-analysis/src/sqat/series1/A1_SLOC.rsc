@@ -122,38 +122,84 @@ tuple[loc, int] findBiggestFile(SLOC sloc) {
 	return result;
 }
 
-test bool testSLOCOfMultilineComment() {
-	list[str] lines = ["a;", "/*", "\tcomment", "*/", "b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+test bool testMultilineComment() {
+	str code = "a;\n/*\n\tcomment\n*/\nb;";
+	
+	str expectedResult = "a;\n\nb;";
+	
+	str actualResult = removeMultiLineComments(code);
+	
+	println("Expected result is <expectedResult>"); 
+	println("Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
 }
 
-test bool testSLOCOfMultilineCommentAndCode() {
-	list[str] lines = ["a; /*", "\tcomment", "*/ b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+test bool testMultilineCommentAndCode() {
+	str code = "a; /*\n\tcomment\n*/ b;";
+	
+	str expectedResult = "a;  b;";
+	
+	str actualResult = removeMultiLineComments(code);
+	
+	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
 }
 
-test bool testSLOCOfSingleLineComment() {
-	list[str] lines = ["a;", "// comment", "b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+test bool testSingleLineComment() {
+	str code = "a;\n// comment\nb;";
+	
+	str expectedResult = "a;\nb;";
+	
+	str actualResult = listToString(removeLinesWithoutCode(code));
+	
+	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
 }
 
-test bool testSLOCOfSingleLineCommentAndCode() {
-	list[str] lines = ["a; // comment", "b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+str listToString(list[str] lines) {
+	str result = "";
+	bool firstLine = true;
+	
+	for (line <- lines) {
+		if (firstLine) {
+			result += line;
+			firstLine = false;
+		}
+		else result += "\n" + line;
+	}
+	
+	return result;
 }
 
-test bool testSLOCOfMultiLineCommentAsOneLine() {
-	list[str] lines = ["a; /* comment */", "b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+test bool testSingleLineCommentAndCode() {
+	str code = "a; // comment\nb;";
+	
+	str expectedResult = "a; // comment\nb;";
+	
+	str actualResult = listToString(removeLinesWithoutCode(code));
+	
+	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
 }
 
-test bool testSLOCOfEmptyLines() {
-	list[str] lines = ["a; /*", "\t", "*/ b;"];
-	list[str] processedLines = removeLinesWithoutCode(removeMultiLineComments(lines));
-	return size(processedLines) == 2;
+test bool testMultiLineCommentAsOneLine() {
+	str code = "a;\n /* comment */\nb;";
+	
+	str expectedResult = "a;\n \nb;";
+	
+	str actualResult = removeMultiLineComments(code);
+	
+	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
+}
+
+test bool testEmptyLines() {
+	str code = "a;\n\t\nb;";
+	
+	str expectedResult = "a;\nb;";
+	
+	str actualResult = listToString(removeLinesWithoutCode(code));
+	
+	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
+	return actualResult == expectedResult;
 }
