@@ -1,10 +1,16 @@
 module sqat::series1::A1_SLOC
 
 import IO;
+<<<<<<< HEAD
 import String;
 import util::FileSystem;
 import util::Math;
 import List;
+=======
+import ParseTree;
+import String;
+import util::FileSystem;
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
 
 /* 
 
@@ -37,6 +43,7 @@ Bonus:
 
 alias SLOC = map[loc file, int sloc];
 
+<<<<<<< HEAD
 str removeMultiLineComments(str sourceCode) {
 	while(/<mlc:\/\*(.|[\r\n])*?\*\/>/ := sourceCode) {
 		sourceCode = replaceAll(sourceCode, mlc, "");
@@ -203,3 +210,25 @@ test bool testEmptyLines() {
 	println("Expected result is <expectedResult>. Actual result is <actualResult>");					 
 	return actualResult == expectedResult;
 }
+=======
+SLOC sloc(loc project) {
+  SLOC result = ();
+  fs = crawl(project);
+  //(0 | println(location) | /file(location) := fs );
+  for (/file(location) := fs) { /* For each file in the designed directory */
+  	println(location);
+  }
+  
+  return result;
+}             
+
+/*
+int countDirs(FileSystem fs) {
+	int count = 0;
+	visit(fs) {
+		case directory(_,_): count += 1;
+	}
+	return count;
+}
+*/
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145

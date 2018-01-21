@@ -1,5 +1,6 @@
 module sqat::series1::A3_CheckStyle
 
+<<<<<<< HEAD
 import sqat::series1::A2_McCabe;
 import lang::java::jdt::m3::AST;
 import Java17ish;
@@ -7,6 +8,10 @@ import Message;
 import IO;
 import List;
 import Set;
+=======
+import Java17ish;
+import Message;
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
 
 /*
 
@@ -46,6 +51,7 @@ Bonus:
 
 */
 
+<<<<<<< HEAD
 
 set[Message] checkStyle(loc project) {
   set[Message] result = {};
@@ -151,3 +157,13 @@ test bool testCheckParameterNumber() {
 	
 	return size(messages) == 1;
 }
+=======
+set[Message] checkStyle(loc project) {
+  set[Message] result = {};
+  
+  // to be done
+  // implement each check in a separate function called here. 
+  
+  return result;
+}
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145

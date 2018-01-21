@@ -1,7 +1,10 @@
 module sqat::series1::A2_McCabe
 
 import lang::java::jdt::m3::AST;
+<<<<<<< HEAD
 import util::ValueUI; // Useful 4 debugging, use text(data) to open a new eclipse tab.
+=======
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
 import IO;
 
 /*
@@ -43,12 +46,16 @@ alias CC = rel[loc method, int cc];
 CC cc(set[Declaration] decls) {
   CC result = {};
   
+<<<<<<< HEAD
   for(Declaration d <- decls) {
   	visit(d) {
   		case m:method(_,_,_,_,body): result[m.src] = mcCabeComplexity(body);
   		case c:constructor(_,_,_,body): result[c.src] = mcCabeComplexity(body);
   	}
   }
+=======
+  // to be done
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
   
   return result;
 }
@@ -56,6 +63,7 @@ CC cc(set[Declaration] decls) {
 alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
+<<<<<<< HEAD
   CCDist distribution = ();
   
   // init map with 0
@@ -143,3 +151,10 @@ test bool testCountControlStatements() {
 	return controlStatementCount == 9;
 	
 }
+=======
+  // to be done
+}
+
+
+
+>>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
