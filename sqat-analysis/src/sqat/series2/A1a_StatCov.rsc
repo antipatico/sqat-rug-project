@@ -1,14 +1,10 @@
 module sqat::series2::A1a_StatCov
 
-<<<<<<< HEAD
 import IO;
 import String;
 import Set;
 import lang::java::jdt::m3::Core;
 import util::ValueUI;
-=======
-import lang::java::jdt::m3::Core;
->>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
 
 /*
 
@@ -52,7 +48,6 @@ Questions:
 
 */
 
-<<<<<<< HEAD
 										 	
 alias Graph = rel [loc from, str label, loc to]; /* Since it seems like enums don't exist in rascal, we are using
 													* costant strings to label our edges.
@@ -222,8 +217,3 @@ test bool testIdentifyTestClasses() {
 	println("Expected class count is 12; actual count: <testClassCount>");
 	return testClassCount == 12;
 }
-=======
-
-M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman-framework|);
-
->>>>>>> 234f705c582e0f1da1401e082a7641465bc88145
