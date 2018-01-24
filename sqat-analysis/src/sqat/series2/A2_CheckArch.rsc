@@ -5,6 +5,9 @@ import lang::java::jdt::m3::Core;
 import Message;
 import ParseTree;
 import IO;
+import String;
+import util::ValueUI;
+import Set;
 
 
 /*
@@ -75,17 +78,17 @@ set[Message] eval(Rule rule, M3 m3) {
   switch(rule){
 	  case (Rule)`<Entity a> must inherit <Entity b>`: {
 	  	if (!inherits(a, b, m3)) {
-	  		println("Wrong! <a> does not depend on <b>!");
+	  		println("<a> inherits <b>");
 	  	}
 	  }
 	  case (Rule)`<Entity a> cannot depend <Entity b>`: {
-	  	if (depends(a, b, m3)) {
-	  		println("Wrong! <a> depends on <b>!");
+	  	if (!depends(a, b, m3)) {
+	  		println("<a> does not depend on <b>");
 	  	}
 	  }
 	  case (Rule)`<Entity a> cannot inherit <Entity b>`: {
 	  	if (inherits(a, b, m3)) {
-	  		println("Wrong! <a> depends on <b>!");
+	  		println("<a> does not inherit <b>");
 	  	}
 	  }
   };
@@ -94,11 +97,10 @@ set[Message] eval(Rule rule, M3 m3) {
 }
 
 bool inherits(Entity a, Entity b, M3 m3) {
-	// to be implemented
-	return false;
+	return isEmpty({m | m <- m3.extends, contains("<a>", "<m.from>") && contains("<b>", "<m.to>")});
 }
 
 bool depends(Entity a, Entity b, M3 m3) {
 	//to be implemented
-	return false;
+	return true;
 }
