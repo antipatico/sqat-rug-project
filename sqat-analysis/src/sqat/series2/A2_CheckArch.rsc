@@ -77,7 +77,7 @@ set[Message] eval(Rule rule, M3 m3) {
   
   switch(rule){
 	  case (Rule)`<Entity a> must inherit <Entity b>`: {
-	  	if (!inherits(a, b, m3)) {
+	  	if (inherits(a, b, m3)) {
 	  		println("<a> inherits <b>");
 	  	}
 	  }
@@ -87,7 +87,7 @@ set[Message] eval(Rule rule, M3 m3) {
 	  	}
 	  }
 	  case (Rule)`<Entity a> cannot inherit <Entity b>`: {
-	  	if (inherits(a, b, m3)) {
+	  	if (!inherits(a, b, m3)) {
 	  		println("<a> does not inherit <b>");
 	  	}
 	  }
@@ -97,10 +97,11 @@ set[Message] eval(Rule rule, M3 m3) {
 }
 
 bool inherits(Entity a, Entity b, M3 m3) {
-	return isEmpty({m | m <- m3.extends, contains("<a>", "<m.from>") && contains("<b>", "<m.to>")});
+	str class1 = replaceAll("<a>", ".", "/");
+	str class2 = replaceAll("<b>", ".", "/");
+	return !isEmpty({m | m <- m3.extends, contains("<m.from>", class1) && contains("<m.to>", class2)});
 }
 
 bool depends(Entity a, Entity b, M3 m3) {
-	//to be implemented
 	return true;
 }
