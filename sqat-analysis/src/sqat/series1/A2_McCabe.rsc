@@ -1,6 +1,7 @@
 module sqat::series1::A2_McCabe
 
 import lang::java::jdt::m3::AST;
+import util::ValueUI; // Useful 4 debugging, use text(data) to open a new eclipse tab.
 import IO;
 
 /*
@@ -42,7 +43,12 @@ alias CC = rel[loc method, int cc];
 CC cc(set[Declaration] decls) {
   CC result = {};
   
-  // to be done
+  for(Declaration d <- decls) {
+  	visit(d) {
+  		case m:method(_,_,_,_,body): result[m.src] = mcCabeComplexity(body);
+  		case c:constructor(_,_,_,body): result[c.src] = mcCabeComplexity(body);
+  	}
+  }
   
   return result;
 }
@@ -50,8 +56,90 @@ CC cc(set[Declaration] decls) {
 alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
-  // to be done
+  CCDist distribution = ();
+  
+  // init map with 0
+  for (c <- cc) {
+  	distribution[c.cc] = 0;
+  }
+  
+  for (c <- cc) {
+  	distribution[c.cc] += 1;
+  }
+  
+  return distribution;
 }
 
+tuple[loc, int] getMaxComplexityMethod(CC complexities) {
+	tuple[loc method, int cc]  result = <|file://n0n3|, -1>;
+	
+	for (c <- complexities, c.cc > result.cc) {
+		result = c;
+	}
+	
+	return result;
+}
 
+void main() {
+	CC complexities = cc(jpacmanASTs());
+	CCDist complexityFrequency = ccDist(complexities);
+	tuple[loc method, int cc] maxComplexity = getMaxComplexityMethod(complexities);
+	
+	println(complexityFrequency);
+	println(maxComplexity);
+}
 
+void printLocationAndComplexity() {
+	for(cc <- cc(jpacmanASTs())) {
+		println("<cc>");
+	}
+}
+
+int mcCabeComplexity(Statement body) {
+	return countControlStatements(body)+1;
+}
+
+int countControlStatements (Statement body) {
+	int count = 0;
+
+	// Information on what counts as control statement was found here: http://checkstyle.sourceforge.net/config_metrics.html#CyclomaticComplexity
+	visit(body) {
+		case \for(_,_,_): count += 1;
+		case \for(_,_,_,_): count += 1;
+		case \foreach(_,_,_) : count +=1;
+		case \if(_,_): count += 1;
+		case \if(_,_,_): count += 1;
+		case \do(_,_): count += 1;
+		case \while(_,_): count += 1;
+		case \switch(_,_): count += 1;
+		case \case(_): count += 1;
+		case \defaultCase(): count += 1;
+		case \catch(_,_): count += 1;
+	}
+	
+	return count;
+}
+
+test bool testCountControlStatements() {
+	str testCode = 	"package org.dummy;
+					'public class Dummy {
+					'public void dummy() {
+					'while(false) foo();
+					'for(var x : foo()) bar();
+					'for(i = 0; i != 100; i++) foo();
+					'switch(0){ case 1: ; case 2: ; default: ; }
+					'if(true) { if(false) foo(); } else bar();
+					'}}"; 
+	Declaration ast = createAstFromString(|file://Dummy.java|, testCode, true);
+	controlStatementCount = 0;
+	
+	visit(ast) {
+		case method(_,_,_,_,body): controlStatementCount += countControlStatements(body);
+  		case constructor(_,_,_,body): controlStatementCount += countControlStatements(body);
+	}
+	
+	println("There are <controlStatementCount> control statements. Expected 9.");
+	
+	return controlStatementCount == 9;
+	
+}
