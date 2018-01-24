@@ -58,6 +58,11 @@ Questions
   of Dicto (and explain why you'd need them). 
 */
 
+M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+
+void main() {
+	eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
+}
 
 set[Message] eval(start[Dicto] dicto, M3 m3) = eval(dicto.top, m3);
 
@@ -67,8 +72,33 @@ set[Message] eval((Dicto)`<Rule* rules>`, M3 m3)
 set[Message] eval(Rule rule, M3 m3) {
   set[Message] msgs = {};
   
-  // to be done
+  switch(rule){
+	  case (Rule)`<Entity a> must inherit <Entity b>`: {
+	  	if (!inherits(a, b, m3)) {
+	  		println("Wrong! <a> does not depend on <b>!");
+	  	}
+	  }
+	  case (Rule)`<Entity a> cannot depend <Entity b>`: {
+	  	if (depends(a, b, m3)) {
+	  		println("Wrong! <a> depends on <b>!");
+	  	}
+	  }
+	  case (Rule)`<Entity a> cannot inherit <Entity b>`: {
+	  	if (inherits(a, b, m3)) {
+	  		println("Wrong! <a> depends on <b>!");
+	  	}
+	  }
+  };
   
   return msgs;
 }
 
+bool inherits(Entity a, Entity b, M3 m3) {
+	// to be implemented
+	return false;
+}
+
+bool depends(Entity a, Entity b, M3 m3) {
+	//to be implemented
+	return false;
+}

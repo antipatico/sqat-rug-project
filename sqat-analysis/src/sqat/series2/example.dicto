@@ -1,4 +1,11 @@
-
-foo.Foo cannot depend bar.Bar
-foo.Foo::init cannot instantiate bar.Bar
-foo cannot import bar
+nl.tudelft.jpacman.npc.ghost.Clyde must inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.npc.ghost.Blinky must inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.npc.ghost.Pinky must inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.npc.ghost.Inky must inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.board cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.level cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.game cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.level cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.npc cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.sprite cannot depend nl.tudelft.jpacman.ui
+nl.tudelft.jpacman.level.Player cannot inherit nl.tudelft.jpacman.npc.NPC
