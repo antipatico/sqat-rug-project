@@ -110,3 +110,21 @@ loc classEntityToLoc(Entity e, M3 m3) {
 		return m.name;
 	}
 }
+
+test bool testEvalCannotDepend() {
+	M3 m3 = createM3FromFile(|project://sqat-analysis/src/sqat/series2/DependentDummy.java|);
+	set[Message] messages = eval((Rule)`sqat.series2.DependentDummy cannot depend sqat.series2`, m3);
+	return size(messages) == 1;
+}
+
+test bool testEvalCannotInherit() {
+	M3 m3 = createM3FromFile(|project://sqat-analysis/src/sqat/series2/ExtendedDummy.java|);
+	set[Message] messages = eval((Rule)`sqat.series2.ExtendedDummy cannot inherit sqat.series2.Dummy`, m3);
+	return size(messages) == 1;
+}
+
+test bool testEvalMustInherit() {
+	m3 = createM3FromFile(|project://sqat-analysis/src/sqat/series2/Dummy.java|);
+	set[Message] messages = eval((Rule)`sqat.series2.Dummy must inherit sqat.series2.ExtendedDummy`, m3);
+	return size(messages) == 1;
+}
