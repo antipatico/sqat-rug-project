@@ -98,8 +98,6 @@ set[Message] eval(Rule rule, M3 m3) {
 
 bool inherits(Entity a, Entity b, M3 m3) = !isEmpty({m | m <- m3.extends, contains("<m.from>", entityToString(a)) && contains("<m.to>", entityToString(b))});
 
-bool depends(Entity a, Entity b, M3 m3) {
-	return true;
-}
+bool depends(Entity a, Entity b, M3 m3) = !isEmpty({m | m <- m3.typeDependency, isClass(m.from) && isClass(m.to) && contains("<m.from>", entityToString(a)) && contains("<m.to>", entityToString(b))});
 
 str entityToString(Entity e) = replaceAll("<e>", ".", "/");
