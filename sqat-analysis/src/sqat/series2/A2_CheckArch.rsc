@@ -64,7 +64,10 @@ Questions
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
 void main() {
-	eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
+	messages = eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
+	for (message <- messages) {
+		println(message);
+	}
 }
 
 set[Message] eval(start[Dicto] dicto, M3 m3) = eval(dicto.top, m3);
@@ -77,18 +80,18 @@ set[Message] eval(Rule rule, M3 m3) {
   
   switch(rule){
 	  case (Rule)`<Entity a> must inherit <Entity b>`: {
-	  	if (inherits(a, b, m3)) {
-	  		println("<a> inherits <b>");
+	  	if (!inherits(a, b, m3)) {
+	  		msgs += error("<a> must inherit <b>", classEntityToLoc(a, m3));
 	  	}
 	  }
 	  case (Rule)`<Entity a> cannot depend <Entity b>`: {
-	  	if (!depends(a, b, m3)) {
-	  		println("<a> does not depend on <b>");
+	  	if (depends(a, b, m3)) {
+	  		msgs += error("<a> cannot depend on <b>", classEntityToLoc(a, m3));
 	  	}
 	  }
 	  case (Rule)`<Entity a> cannot inherit <Entity b>`: {
-	  	if (!inherits(a, b, m3)) {
-	  		println("<a> does not inherit <b>");
+	  	if (inherits(a, b, m3)) {
+	  		msgs += error("<a> cannot inherit <b>", classEntityToLoc(a, m3));
 	  	}
 	  }
   };
@@ -101,3 +104,9 @@ bool inherits(Entity a, Entity b, M3 m3) = !isEmpty({m | m <- m3.extends, contai
 bool depends(Entity a, Entity b, M3 m3) = !isEmpty({m | m <- m3.typeDependency, isClass(m.from) && isClass(m.to) && contains("<m.from>", entityToString(a)) && contains("<m.to>", entityToString(b))});
 
 str entityToString(Entity e) = replaceAll("<e>", ".", "/");
+
+loc classEntityToLoc(Entity e, M3 m3) {
+	for (m <- m3.declarations, isClass(m.name) && contains("<m.name>", entityToString(e))) {
+		return m.name;
+	}
+}
