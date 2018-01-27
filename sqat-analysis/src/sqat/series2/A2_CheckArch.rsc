@@ -57,14 +57,24 @@ Tip:
 
 Questions
 - how would you test your evaluator of Dicto rules? (sketch a design)
+	There are some test in the end of the file. Basiccally, you create some "dummy" files 
+	that violate a rule and see whether your program can actually detect the violation. 
 - come up with 3 rule types that are not currently supported by this version
   of Dicto (and explain why you'd need them). 
+  	1. Naming of classes and packages. There could be a need for classes that do similar job or
+  	belong to the same package etc. have some naming convention like common suffix
+  	or prefix.
+  	2. Implement interface keyword. With current language there is no way to check whether a certain
+  	class implements a certain interface. Interface is generally missing from the language
+  	though it could be useful to create rules involving it.
+  	3. Only <some class> can <some action> on <some class>. Without this rule you have to check
+  	every opposite case which could be a daunting task.
 */
 
 M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 
 void main() {
-	messages = eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
+	set[Message] messages = eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
 	for (message <- messages) {
 		println(message);
 	}
