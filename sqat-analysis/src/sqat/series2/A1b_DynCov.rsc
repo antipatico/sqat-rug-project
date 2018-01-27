@@ -45,19 +45,44 @@ Tips:
 
 */
 
+BlockStm updateInjectedStm(str clas, str meth) {
+	return parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<clas>\", \"<meth>\");");
+}
+
 
 void methodCoverage(loc project) {
 	for (f <- files(|project://jpacman-framework/src/main|), f.extension == "java") {
 	    Tree tree = parseJava(f);
-	    println(f);
-	    BlockStm insertedStm = (BlockStm)`CoverageAPI("test","test");`;
+	    
+	    str clas, meth = "none";
+	    BlockStm injectedStm;
+	    
 	    tree = visit(tree) {
-	    	case (MethodDecHead) `<MethodDecHead mdh>`: println(mdh);
-	    	case (ClassDecHead) `<ClassDecHead cdh>`: println(cdh);
-	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm insertedStm> <BlockStm* stms>}`
+	    	case (EnumDecHead) `<EnumDecHead edh>`: {
+	    		if(/([a-z]+\s*)*enum\s+<enumName:[a-zA-Z0-9]+>/ := "<edh>") {
+	    			clas = enumName;
+	    			injectedStm = updateInjectedStm(clas, meth);
+	    		} else { println("Enum parse failed!"); }
+	    	}
+	    	case (ClassDecHead) `<ClassDecHead cdh>`: {
+	    		if(/([a-z]+\s*)*class\s+<className:[a-zA-Z0-9]+>/ := "<cdh>") {
+	    			clas = className;
+	    			injectedStm = updateInjectedStm(clas, meth);
+	    		} else { println("Class parse failed!"); }
+	    	}
+	    	case (MethodDecHead) `<MethodDecHead mdh>`: {
+	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:\w+>\(/ := "<mdh>") {
+	    			meth = methodName;
+	    			injectedStm = updateInjectedStm(clas, meth);
+	    		} else { println("Method parse failed!"); }
+	    	}
+	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm injectedStm> <BlockStm* stms>}`
 	    }
+	    
+	    f.authority = "jpacman-instrumented";
+	    writeFile(f, unparse(tree));
 	    //println(unparse(tree));
-	    break;
+	    //break;
   	}
 }
 
