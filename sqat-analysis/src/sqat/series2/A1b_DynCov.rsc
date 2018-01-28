@@ -131,6 +131,14 @@ BlockStm* putAfterEvery(BlockStm* stms, BlockStm(loc) f) {
   }
 }
 
+str getClassName(loc name) {
+	return head(tail(reverse(split("/", "<name>"))));
+}
+
+str getMethodName(loc name) {
+	return head(split("(", head(reverse(split("/", "<name>")))));
+}
+
 test bool testGetClassName() {
 	return "Level" == getClassName(|java+method:///nl/tudelft/jpacman/level/Level/isAnyPlayerAlive()|);
 }
