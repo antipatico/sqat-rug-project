@@ -5,6 +5,10 @@ import ParseTree;
 import util::FileSystem;
 import util::ValueUI;
 import IO;
+import lang::csv::IO;
+import lang::java::jdt::m3::Core;
+import String;
+import Set;
 
 /*
 
@@ -45,10 +49,11 @@ Tips:
 
 */
 
+M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+
 BlockStm updateInjectedStm(str clas, str meth) {
 	return parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<clas>\", \"<meth>\");");
 }
-
 
 void methodCoverage(loc project) {
 	for (f <- files(|project://jpacman-framework/src/main|), f.extension == "java") {
@@ -62,19 +67,25 @@ void methodCoverage(loc project) {
 	    		if(/([a-z]+\s*)*enum\s+<enumName:[a-zA-Z0-9]+>/ := "<edh>") {
 	    			clas = enumName;
 	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { println("Enum parse failed!"); }
+	    		} else { 
+	    			println("Enum parse failed!"); 
+	    		}
 	    	}
 	    	case (ClassDecHead) `<ClassDecHead cdh>`: {
 	    		if(/([a-z]+\s*)*class\s+<className:[a-zA-Z0-9]+>/ := "<cdh>") {
 	    			clas = className;
 	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { println("Class parse failed!"); }
+	    		} else { 
+	    			println("Class parse failed!"); 
+	    		}
 	    	}
 	    	case (MethodDecHead) `<MethodDecHead mdh>`: {
 	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:\w+>\(/ := "<mdh>") {
 	    			meth = methodName;
 	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { println("Method parse failed!"); }
+	    		} else { 
+	    			println("Method parse failed!"); 
+	    		}
 	    	}
 	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm injectedStm> <BlockStm* stms>}`
 	    }
@@ -86,11 +97,17 @@ void methodCoverage(loc project) {
   	}
 }
 
+real calculateMethodCoverage() {
+	r = readCSV(#rel[str class, str method], |project://jpacman-instrumented/coverage-log.csv|, header=false);
+	text(r);
+	set[loc] allMethods = {m.name | m <- m3.declarations, isMethod(m.name)};
+	text(allMethods);
+	return size(r)*1.0/size(allMethods);
+}
+
 void lineCoverage(loc project) {
   // to be done
 }
-
-
 
 // Helper function to deal with concrete statement lists
 // second arg should be a closure taking a location (of the element)
@@ -114,4 +131,10 @@ BlockStm* putAfterEvery(BlockStm* stms, BlockStm(loc) f) {
   }
 }
 
+test bool testGetClassName() {
+	return "Level" == getClassName(|java+method:///nl/tudelft/jpacman/level/Level/isAnyPlayerAlive()|);
+}
 
+test bool testGetMethodName() {
+	return "AnimatedSprite" == getMethodName(|java+constructor:///nl/tudelft/jpacman/sprite/AnimatedSprite/AnimatedSprite(nl.tudelft.jpacman.sprite.Sprite%5B%5D,int,boolean)|);
+}
