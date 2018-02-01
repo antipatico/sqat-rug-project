@@ -49,14 +49,14 @@ Tips:
 
 */
 
-M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
-
 BlockStm updateInjectedStm(str clas, str meth) {
 	return parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<clas>\", \"<meth>\");");
 }
 
-void methodCoverage(loc project) {
-	for (f <- files(|project://jpacman-framework/src/main|), f.extension == "java") {
+void methodCoverage() {
+	loc proj = |project://jpacman-framework/src/main|;
+	set[loc] fs = files(proj);
+	for (f <- fs, f.extension == "java") {
 	    Tree tree = parseJava(f);
 	    
 	    str clas, meth = "none";
@@ -80,7 +80,7 @@ void methodCoverage(loc project) {
 	    		}
 	    	}
 	    	case (MethodDecHead) `<MethodDecHead mdh>`: {
-	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:\w+>\(/ := "<mdh>") {
+	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:.+\)>/ := "<mdh>") {
 	    			meth = methodName;
 	    			injectedStm = updateInjectedStm(clas, meth);
 	    		} else { 
@@ -92,17 +92,9 @@ void methodCoverage(loc project) {
 	    
 	    f.authority = "jpacman-instrumented";
 	    writeFile(f, unparse(tree));
+	    println(f);
 	    //println(unparse(tree));
-	    //break;
   	}
-}
-
-real calculateMethodCoverage() {
-	r = readCSV(#rel[str class, str method], |project://jpacman-instrumented/coverage-log.csv|, header=false);
-	text(r);
-	set[loc] allMethods = {m.name | m <- m3.declarations, isMethod(m.name)};
-	text(allMethods);
-	return size(r)*1.0/size(allMethods);
 }
 
 void lineCoverage(loc project) {
@@ -129,6 +121,19 @@ BlockStm* putAfterEvery(BlockStm* stms, BlockStm(loc) f) {
   if ((Block)`{<BlockStm* stms2>}` := put((Block)`{<BlockStm* stms>}`)) {
     return stms2;
   }
+}
+
+real calculateMethodCoverage() {
+	r = readCSV(#rel[str class, str method], |project://jpacman-instrumented/coverage-log.csv|, header=false);
+	text(r);
+	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+	set[loc] allMethods = {m.name | m <- m3.declarations, isMethod(m.name)};
+	text(allMethods);
+	return size(r)*1.0/size(allMethods);
+}
+
+void cleanCoverage() {
+	remove(|project://jpacman-instrumented/coverage-log.csv|);
 }
 
 str getClassName(loc name) {
