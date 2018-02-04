@@ -49,52 +49,42 @@ Tips:
 
 */
 
-BlockStm updateInjectedStm(str clas, str meth) {
-	return parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<clas>\", \"<meth>\");");
-}
-
-void methodCoverage() {
+void createProjectShadow() {
 	loc proj = |project://jpacman-framework/src/main|;
 	set[loc] fs = files(proj);
 	for (f <- fs, f.extension == "java") {
+	    println(f);
 	    Tree tree = parseJava(f);
 	    
-	    str clas, meth = "none";
-	    BlockStm injectedStm;
+	    loc location = |project://none|;
 	    
 	    tree = visit(tree) {
-	    	case (EnumDecHead) `<EnumDecHead edh>`: {
-	    		if(/([a-z]+\s*)*enum\s+<enumName:[a-zA-Z0-9]+>/ := "<edh>") {
-	    			clas = enumName;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Enum parse failed!"); 
-	    		}
-	    	}
-	    	case (ClassDecHead) `<ClassDecHead cdh>`: {
-	    		if(/([a-z]+\s*)*class\s+<className:[a-zA-Z0-9]+>/ := "<cdh>") {
-	    			clas = className;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Class parse failed!"); 
-	    		}
-	    	}
-	    	case (MethodDecHead) `<MethodDecHead mdh>`: {
-	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:.+\)>/ := "<mdh>") {
-	    			meth = methodName;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Method parse failed!"); 
-	    		}
-	    	}
-	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm injectedStm> <BlockStm* stms>}`
+	    	case m:(MethodDec)`<MethodDecHead mdh> <MethodBody mb>` => insertStm(mdh, mb, m@\loc)
 	    }
 	    
 	    f.authority = "jpacman-instrumented";
 	    writeFile(f, unparse(tree));
-	    println(f);
-	    //println(unparse(tree));
   	}
+}
+
+MethodDec insertStm(MethodDecHead mdh, MethodBody mb, loc location) {
+	hitInfo = parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<location>\");");
+	mb = visit(mb) {
+		case (Block) `{ <BlockStm* bs> }` => (Block)`{ <BlockStm hitInfo> <BlockStm* bs> }`
+	}
+	
+	return (MethodDec)`<MethodDecHead mdh> <MethodBody mb>`;
+}
+
+real methodCoverage() {
+	list[str] r = readFileLines(|project://jpacman-instrumented/coverage-log.csv|);
+	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+	rel[loc name, loc src] allMethods = {m | m <- m3.declarations, isMethod(m.name) && !contains("<m.src>", "src/test/") && !contains("<m.src>", "java+constructor:")};
+	return size(r)*1.0/size(allMethods);
+}
+
+void cleanCoverage() {
+	remove(|project://jpacman-instrumented/coverage-log.csv|);
 }
 
 void lineCoverage(loc project) {
@@ -121,33 +111,4 @@ BlockStm* putAfterEvery(BlockStm* stms, BlockStm(loc) f) {
   if ((Block)`{<BlockStm* stms2>}` := put((Block)`{<BlockStm* stms>}`)) {
     return stms2;
   }
-}
-
-real calculateMethodCoverage() {
-	r = readCSV(#rel[str class, str method], |project://jpacman-instrumented/coverage-log.csv|, header=false);
-	text(r);
-	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
-	set[loc] allMethods = {m.name | m <- m3.declarations, isMethod(m.name)};
-	text(allMethods);
-	return size(r)*1.0/size(allMethods);
-}
-
-void cleanCoverage() {
-	remove(|project://jpacman-instrumented/coverage-log.csv|);
-}
-
-str getClassName(loc name) {
-	return head(tail(reverse(split("/", "<name>"))));
-}
-
-str getMethodName(loc name) {
-	return head(split("(", head(reverse(split("/", "<name>")))));
-}
-
-test bool testGetClassName() {
-	return "Level" == getClassName(|java+method:///nl/tudelft/jpacman/level/Level/isAnyPlayerAlive()|);
-}
-
-test bool testGetMethodName() {
-	return "AnimatedSprite" == getMethodName(|java+constructor:///nl/tudelft/jpacman/sprite/AnimatedSprite/AnimatedSprite(nl.tudelft.jpacman.sprite.Sprite%5B%5D,int,boolean)|);
 }

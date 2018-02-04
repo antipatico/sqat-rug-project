@@ -34,8 +34,8 @@ public final class CoverageAPI {
 		}
 	}
 	
-	public static void hit(String clas, String meth) {
-		log(String.format("%s,%s\n", clas, meth));
+	public static void hit(String location) {
+		log(String.format("%s\n", location));
 	}
 	
 	public static void hit(String clas, String meth, int line) {
