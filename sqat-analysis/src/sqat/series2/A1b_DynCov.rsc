@@ -29,7 +29,7 @@ coverage information through the insert calls to your little API.
 
 Questions
 - use a third-party coverage tool (e.g. Clover) to compare your results to (explain differences)
-	Result of this program is 74% coverage, while EclEmma suggests that coverage is 76% which is 
+	Result of this program is 73% coverage, while EclEmma suggests that coverage is 76% which is 
 	quite close. Difference could be because our program does not count in covered constructors.
 	But then depends on how EclEmma is implemented.
 	
@@ -93,7 +93,7 @@ MethodDec insertStm(MethodDecHead mdh, MethodBody mb, loc location) {
 void methodCoverage() {
 	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 	
-	list[str] methodCoverageResults = readFileLines(|project://jpacman-instrumented/coverage-log.csv|);
+	list[str] methodCoverageResults = readFileLines(|project://jpacman-instrumented/method-coverage-log.csv|);
 	set[str] methodsHit = {};
 	for (r <- methodCoverageResults) {
 		methodsHit += r;

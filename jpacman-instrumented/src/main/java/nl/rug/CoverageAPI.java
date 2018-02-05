@@ -6,17 +6,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class CoverageAPI {
-	private static final String logPath="coverage-log.csv";
+	private static final String methodLogPath="method-coverage-log.csv";
+	private static final String lineLogPath="line-coverage-log.csv";
 	private static Set<String> covered = new HashSet<String>();
 	
-	private static void log(String message) {
+	private static void log(String message, String path) {
 		if(covered.contains(message)) {
 			return;
 		}
 
 		covered.add(message);
 		try {
-			File logFile = new File(logPath);
+			File logFile = new File(path);
 			BufferedWriter bw;
 			
 			if(!logFile.exists()) {
@@ -28,17 +29,17 @@ public final class CoverageAPI {
 			bw.flush();
 			bw.close();
 		} catch (Exception e) {
-			System.err.println(String.format("ERROR: can't open %s with WRITE privilege.", logPath));
+			System.err.println(String.format("ERROR: can't open log fiel with WRITE privilege."));
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 	
 	public static void hit(String location) {
-		log(String.format("%s\n", location));
+		log(String.format("%s\n", location), methodLogPath);
 	}
 	
-	public static void hit(String clas, String meth, int line) {
-		log(String.format("%s,%s,%d\n", clas, meth, line));
+	public static void hit(String location, int line) {
+		log(String.format("%s,%d\n", location, line), lineLogPath);
 	}
 }
