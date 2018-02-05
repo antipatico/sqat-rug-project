@@ -29,9 +29,23 @@ coverage information through the insert calls to your little API.
 
 Questions
 - use a third-party coverage tool (e.g. Clover) to compare your results to (explain differences)
+	Result of this program is 74% coverage, while EclEmma suggests that coverage is 76% which is 
+	quite close. Difference could be because our program does not count in covered constructors.
+	But then depends on how EclEmma is implemented.
+	
 - which methods have full line coverage?
 - which methods are not covered at all, and why does it matter (if so)?
+	We couldn't tell exactly because location of the method that was put into CSV file was different
+	from the src of the method mentioned in m3.declarations. Because of this, it was impossible to tell,
+	which methods did get called while running tests and which were not.
+	
+	Usually you want your code to be covered completely with the tests, because it leaves less space
+	for errors and prevents "breaking" the code while adding some changes to it. Automatic testing 
+	takes less time in the long run than manual testing does.
+
 - what are the drawbacks of source-based instrumentation?
+	It is slow (especially for bigger projects) and running instrumented code requires working 
+	project which is not always the case in the process of developing. 
 
 Tips:
 - create a shadow JPacman project (e.g. jpacman-instrumented) to write out the transformed source files.
@@ -49,7 +63,7 @@ Tips:
 
 */
 
-void createProjectShadow() {
+void instrumentMethods() {
 	loc proj = |project://jpacman-framework/src/main|;
 	set[loc] fs = files(proj);
 	for (f <- fs, f.extension == "java") {
@@ -76,19 +90,22 @@ MethodDec insertStm(MethodDecHead mdh, MethodBody mb, loc location) {
 	return (MethodDec)`<MethodDecHead mdh> <MethodBody mb>`;
 }
 
-real methodCoverage() {
-	list[str] r = readFileLines(|project://jpacman-instrumented/coverage-log.csv|);
+void methodCoverage() {
 	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
-	rel[loc name, loc src] allMethods = {m | m <- m3.declarations, isMethod(m.name) && !contains("<m.src>", "src/test/") && !contains("<m.src>", "java+constructor:")};
-	return size(r)*1.0/size(allMethods);
+	
+	list[str] methodCoverageResults = readFileLines(|project://jpacman-instrumented/coverage-log.csv|);
+	set[str] methodsHit = {};
+	for (r <- methodCoverageResults) {
+		methodsHit += r;
+	}
+	
+	rel[loc name, loc src] allMethods = {m | m <- m3.declarations, isMethod(m.name) && !isConstructor(m.name) && !contains("<m.src>", "src/test/")};
+	
+	println("Method coverage is <size(methodsHit)*1.0/size(allMethods)>");
 }
 
-void cleanCoverage() {
-	remove(|project://jpacman-instrumented/coverage-log.csv|);
-}
-
-void lineCoverage(loc project) {
-  // to be done
+void main() {
+	methodCoverage();
 }
 
 // Helper function to deal with concrete statement lists
