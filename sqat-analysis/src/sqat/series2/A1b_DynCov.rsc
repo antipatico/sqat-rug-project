@@ -29,9 +29,23 @@ coverage information through the insert calls to your little API.
 
 Questions
 - use a third-party coverage tool (e.g. Clover) to compare your results to (explain differences)
+	Result of this program is 73% coverage, while EclEmma suggests that coverage is 76% which is 
+	quite close. Difference could be because our program does not count in covered constructors.
+	But then depends on how EclEmma is implemented.
+	
 - which methods have full line coverage?
 - which methods are not covered at all, and why does it matter (if so)?
+	We couldn't tell exactly because location of the method that was put into CSV file was different
+	from the src of the method mentioned in m3.declarations. Because of this, it was impossible to tell,
+	which methods did get called while running tests and which were not.
+	
+	Usually you want your code to be covered completely with the tests, because it leaves less space
+	for errors and prevents "breaking" the code while adding some changes to it. Automatic testing 
+	takes less time in the long run than manual testing does.
+
 - what are the drawbacks of source-based instrumentation?
+	It is slow (especially for bigger projects) and running instrumented code requires working 
+	project which is not always the case in the process of developing. 
 
 Tips:
 - create a shadow JPacman project (e.g. jpacman-instrumented) to write out the transformed source files.
@@ -49,56 +63,49 @@ Tips:
 
 */
 
-BlockStm updateInjectedStm(str clas, str meth) {
-	return parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<clas>\", \"<meth>\");");
-}
-
-void methodCoverage() {
+void instrumentMethods() {
 	loc proj = |project://jpacman-framework/src/main|;
 	set[loc] fs = files(proj);
 	for (f <- fs, f.extension == "java") {
+	    println(f);
 	    Tree tree = parseJava(f);
 	    
-	    str clas, meth = "none";
-	    BlockStm injectedStm;
+	    loc location = |project://none|;
 	    
 	    tree = visit(tree) {
-	    	case (EnumDecHead) `<EnumDecHead edh>`: {
-	    		if(/([a-z]+\s*)*enum\s+<enumName:[a-zA-Z0-9]+>/ := "<edh>") {
-	    			clas = enumName;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Enum parse failed!"); 
-	    		}
-	    	}
-	    	case (ClassDecHead) `<ClassDecHead cdh>`: {
-	    		if(/([a-z]+\s*)*class\s+<className:[a-zA-Z0-9]+>/ := "<cdh>") {
-	    			clas = className;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Class parse failed!"); 
-	    		}
-	    	}
-	    	case (MethodDecHead) `<MethodDecHead mdh>`: {
-	    		if(/(\s*\@.+\n)?(\s|[\<\>A-Za-z0-9]+)*\s+<methodName:.+\)>/ := "<mdh>") {
-	    			meth = methodName;
-	    			injectedStm = updateInjectedStm(clas, meth);
-	    		} else { 
-	    			println("Method parse failed!"); 
-	    		}
-	    	}
-	    	case (Block)`{<BlockStm* stms>}` => (Block)`{<BlockStm injectedStm> <BlockStm* stms>}`
+	    	case m:(MethodDec)`<MethodDecHead mdh> <MethodBody mb>` => insertStm(mdh, mb, m@\loc)
 	    }
 	    
 	    f.authority = "jpacman-instrumented";
 	    writeFile(f, unparse(tree));
-	    println(f);
-	    //println(unparse(tree));
   	}
 }
 
-void lineCoverage(loc project) {
-  // to be done
+MethodDec insertStm(MethodDecHead mdh, MethodBody mb, loc location) {
+	hitInfo = parse(#BlockStm, "nl.rug.CoverageAPI.hit(\"<location>\");");
+	mb = visit(mb) {
+		case (Block) `{ <BlockStm* bs> }` => (Block)`{ <BlockStm hitInfo> <BlockStm* bs> }`
+	}
+	
+	return (MethodDec)`<MethodDecHead mdh> <MethodBody mb>`;
+}
+
+void methodCoverage() {
+	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+	
+	list[str] methodCoverageResults = readFileLines(|project://jpacman-instrumented/method-coverage-log.csv|);
+	set[str] methodsHit = {};
+	for (r <- methodCoverageResults) {
+		methodsHit += r;
+	}
+	
+	rel[loc name, loc src] allMethods = {m | m <- m3.declarations, isMethod(m.name) && !isConstructor(m.name) && !contains("<m.src>", "src/test/")};
+	
+	println("Method coverage is <size(methodsHit)*1.0/size(allMethods)>");
+}
+
+void main() {
+	methodCoverage();
 }
 
 // Helper function to deal with concrete statement lists
@@ -121,33 +128,4 @@ BlockStm* putAfterEvery(BlockStm* stms, BlockStm(loc) f) {
   if ((Block)`{<BlockStm* stms2>}` := put((Block)`{<BlockStm* stms>}`)) {
     return stms2;
   }
-}
-
-real calculateMethodCoverage() {
-	r = readCSV(#rel[str class, str method], |project://jpacman-instrumented/coverage-log.csv|, header=false);
-	text(r);
-	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
-	set[loc] allMethods = {m.name | m <- m3.declarations, isMethod(m.name)};
-	text(allMethods);
-	return size(r)*1.0/size(allMethods);
-}
-
-void cleanCoverage() {
-	remove(|project://jpacman-instrumented/coverage-log.csv|);
-}
-
-str getClassName(loc name) {
-	return head(tail(reverse(split("/", "<name>"))));
-}
-
-str getMethodName(loc name) {
-	return head(split("(", head(reverse(split("/", "<name>")))));
-}
-
-test bool testGetClassName() {
-	return "Level" == getClassName(|java+method:///nl/tudelft/jpacman/level/Level/isAnyPlayerAlive()|);
-}
-
-test bool testGetMethodName() {
-	return "AnimatedSprite" == getMethodName(|java+constructor:///nl/tudelft/jpacman/sprite/AnimatedSprite/AnimatedSprite(nl.tudelft.jpacman.sprite.Sprite%5B%5D,int,boolean)|);
 }
